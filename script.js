@@ -1,8 +1,8 @@
 /* ════════════════════════════════════════════
-   Álbum Copa do Mundo 2026 — script.js
+   Álbum Copa 2026 — script.js
 ════════════════════════════════════════════ */
 
-const SK = 'copa26-album-v5';
+const SK = 'copa26-v6';
 
 /* ── Teams ──────────────────────────────── */
 const TEAMS = [
@@ -56,479 +56,666 @@ const TEAMS = [
   { code:'PAN', name:'Panamá',          grp:'L', fi:'pa', col:'#005293' },
 ];
 
-/* ── Special pages ───────────────────────── */
 const SPECIALS = [
-  {
-    id:'intro', label:'Página Inicial', icon:'🌟', eyebrow:'ABERTURA',
-    stickers: Array.from({length:9},(_,i)=>({ id:`FWC0${i}`, lbl:`FWC ${i}`, type:'fwc' }))
-  },
-  {
-    id:'history', label:'World Cup History', icon:'🏆', eyebrow:'FIFA WORLD CUP HISTORY',
-    stickers: Array.from({length:11},(_,i)=>({ id:`FWC${i+9}`, lbl:`FWC ${i+9}`, type:'fwc' }))
-  },
-  {
-    id:'coca', label:'Coca-Cola', icon:'🥤', eyebrow:'FIGURINHAS COCA-COLA',
-    stickers: Array.from({length:14},(_,i)=>({ id:`CC${String(i+1).padStart(2,'0')}`, lbl:`CC ${i+1}`, type:'coca' }))
-  }
+  { id:'intro',   label:'Página Inicial',      icon:'🌟', eyebrow:'ABERTURA',
+    stickers: Array.from({length:9},(_,i)=>({id:`FWC0${i}`,lbl:`FWC ${i}`,type:'fwc'})) },
+  { id:'history', label:'World Cup History',   icon:'🏆', eyebrow:'FIFA WORLD CUP HISTORY',
+    stickers: Array.from({length:11},(_,i)=>({id:`FWC${i+9}`,lbl:`FWC ${i+9}`,type:'fwc'})) },
+  { id:'coca',    label:'Coca-Cola',            icon:'🥤', eyebrow:'FIGURINHAS COCA-COLA',
+    stickers: Array.from({length:14},(_,i)=>({id:`CC${String(i+1).padStart(2,'0')}`,lbl:`CC ${i+1}`,type:'coca'})) },
 ];
 
-/* Build page list: intro → teams → history → coca */
 const PAGES = [
   SPECIALS[0],
-  ...TEAMS.map(t => ({ id:t.code, type:'team', team:t })),
+  ...TEAMS.map(t=>({id:t.code, type:'team', team:t})),
   SPECIALS[1],
   SPECIALS[2],
 ];
 
 function pageStickerIds(page) {
-  if (page.type === 'team') return Array.from({length:20},(_,i)=>`${page.team.code}${String(i+1).padStart(2,'0')}`);
+  if(page.type==='team') return Array.from({length:20},(_,i)=>`${page.team.code}${String(i+1).padStart(2,'0')}`);
   return page.stickers.map(s=>s.id);
 }
 
-const TOTAL = PAGES.reduce((s,p)=>s+pageStickerIds(p).length, 0);
+const TOTAL = PAGES.reduce((s,p)=>s+pageStickerIds(p).length,0);
+
+/* ── State ──────────────────────────────── */
+let obtained    = new Set();
+let duplicates  = new Set(); // ids marked as duplicate
+let curPage     = PAGES.findIndex(p=>p.id==='BRA');
+let dropOpen    = false;
+let profile     = { name:'', city:'' };
+let userLat     = null;
+let userLng     = null;
+
+/* ── Persist ─────────────────────────────── */
+function save() {
+  try {
+    localStorage.setItem(SK, JSON.stringify({
+      obtained: [...obtained],
+      duplicates: [...duplicates],
+      profile,
+    }));
+  } catch(e){}
+}
+
+function load() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    if(Array.isArray(d.obtained))   obtained   = new Set(d.obtained);
+    if(Array.isArray(d.duplicates)) duplicates = new Set(d.duplicates);
+    if(d.profile) profile = d.profile;
+  } catch(e){}
+}
 
 /* ── Flag helper ─────────────────────────── */
 function mkFlag(fi, cls) {
   const s = document.createElement('span');
-  s.className = `fi fi-${fi} ${cls||''}`;
+  s.className = `fi fi-${fi}${cls?' '+cls:''}`;
   return s;
 }
-let obtained = new Set();
-let curPage  = PAGES.findIndex(p=>p.id==='BRA');
-let selOpen  = false;
 
-/* ── Persist ─────────────────────────────── */
-function save() { try { localStorage.setItem(SK, JSON.stringify([...obtained])); } catch(e){} }
-function load() {
-  try {
-    const r = localStorage.getItem(SK);
-    if(r){ const p=JSON.parse(r); if(Array.isArray(p)) obtained=new Set(p); }
-  } catch(e){}
-}
-
-/* ── Toggle ──────────────────────────────── */
+/* ── Toggle sticker ─────────────────────── */
 function toggle(id) {
-  if(obtained.has(id)) obtained.delete(id); else obtained.add(id);
-  save(); render();
+  if(obtained.has(id)) {
+    obtained.delete(id);
+    duplicates.delete(id); // can't be dup if not obtained
+  } else {
+    obtained.add(id);
+  }
+  save(); renderAlbum(); updateBadges(); renderTrocas(); renderVendas();
 }
 
-/* ── Build sticker slot ──────────────────── */
+/* ── Toggle duplicate ────────────────────── */
+function toggleDup(id) {
+  if(!obtained.has(id)) return; // must be obtained first
+  if(duplicates.has(id)) duplicates.delete(id);
+  else duplicates.add(id);
+  save(); renderAlbum(); updateBadges(); renderTrocas(); renderVendas();
+}
+
+/* ─────────────────────────────────────────
+   ALBUM RENDERING
+───────────────────────────────────────────*/
 function mkSlot(id, numLabel, extraClass, iconType, slotLabel, col, area) {
   const got = obtained.has(id);
+  const dup = duplicates.has(id);
 
   const div = document.createElement('div');
-  div.className = 'slot' + (extraClass?' '+extraClass:'') + (got?' got':'');
+  div.className = 'slot'+(extraClass?' '+extraClass:'')+(got?' got':'')+(dup?' dup':'');
   if(area) div.style.gridArea = area;
-  if(col && got) div.style.setProperty('--tc', col);
-  else if(col) div.style.setProperty('--tc', col);
+  if(col) div.style.setProperty('--tc', col);
 
-  /* Number label */
   const num = document.createElement('div');
   num.className = 'slot-num';
   num.textContent = numLabel;
 
-  /* Icon */
-  let iconEl;
+  let icon;
   if(!got) {
     if(iconType==='badge') {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-shield';
+      icon = document.createElement('div'); icon.className='slot-shield';
     } else if(iconType==='photo') {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-cam';
-      iconEl.textContent = '📷';
+      icon = document.createElement('div'); icon.className='slot-cam'; icon.textContent='📷';
     } else if(iconType==='fwc') {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-star';
-      iconEl.textContent = '⭐';
+      icon = document.createElement('div'); icon.className='slot-star'; icon.textContent='⭐';
     } else if(iconType==='coca') {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-cola';
-      iconEl.textContent = '🥤';
+      icon = document.createElement('div'); icon.className='slot-cola'; icon.textContent='🥤';
     } else {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-silhouette';
-      const h = document.createElement('div'); h.className='slot-sil-head';
-      const b = document.createElement('div'); b.className='slot-sil-body';
-      iconEl.append(h,b);
+      icon = document.createElement('div'); icon.className='slot-sil';
+      const h=document.createElement('div'); h.className='slot-sil-h';
+      const b=document.createElement('div'); b.className='slot-sil-b';
+      icon.append(h,b);
     }
   } else {
-    // Obtained: show flag or icon
-    if(iconType==='badge') {
-      const pg = PAGES[curPage];
-      iconEl = pg.type==='team'
-        ? mkFlag(pg.team.fi, 'fi-md')
-        : document.createElement('span');
-      iconEl.style.cssText = 'border-radius:3px;position:relative;z-index:3;display:block;';
+    const pg = PAGES[curPage];
+    if(iconType==='badge' && pg.type==='team') {
+      icon = mkFlag(pg.team.fi, 'fi-slot');
     } else if(iconType==='photo') {
-      iconEl = document.createElement('div');
-      iconEl.style.cssText = 'font-size:16px;position:relative;z-index:3';
-      iconEl.textContent = '📸';
+      icon = document.createElement('div');
+      icon.style.cssText='font-size:14px;position:relative;z-index:3';
+      icon.textContent='📸';
     } else if(iconType==='fwc') {
-      iconEl = document.createElement('div');
-      iconEl.style.cssText = 'font-size:20px;position:relative;z-index:3';
-      iconEl.textContent = '⭐';
+      icon = document.createElement('div');
+      icon.style.cssText='font-size:18px;position:relative;z-index:3';
+      icon.textContent='⭐';
     } else if(iconType==='coca') {
-      iconEl = document.createElement('div');
-      iconEl.style.cssText = 'font-size:18px;position:relative;z-index:3';
-      iconEl.textContent = '🥤';
+      icon = document.createElement('div');
+      icon.style.cssText='font-size:16px;position:relative;z-index:3';
+      icon.textContent='🥤';
     } else {
-      iconEl = document.createElement('div');
-      iconEl.className = 'slot-silhouette';
-      const h = document.createElement('div'); h.className='slot-sil-head';
-      const b = document.createElement('div'); b.className='slot-sil-body';
-      iconEl.append(h,b);
+      icon = document.createElement('div'); icon.className='slot-sil';
+      const h=document.createElement('div'); h.className='slot-sil-h';
+      const b=document.createElement('div'); b.className='slot-sil-b';
+      icon.append(h,b);
     }
   }
 
-  /* Label */
   const lbl = document.createElement('div');
-  lbl.className = 'slot-label'; // uses .slot-lbl but let's use consistent name
-  lbl.style.cssText = 'font-family:var(--font-cond);font-size:7px;font-weight:600;color:rgba(0,0,0,0.22);text-align:center;letter-spacing:.03em;position:relative;z-index:3';
-  if(got) lbl.style.color = 'rgba(255,255,255,0.65)';
+  lbl.className = 'slot-lbl';
+  lbl.style.cssText='font-family:var(--font-c);font-size:6.5px;font-weight:600;letter-spacing:.03em;text-align:center;position:relative;z-index:3;';
+  lbl.style.color = got ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.2)';
+  if(iconType==='fwc')  { lbl.style.color = got ? 'rgba(255,255,255,0.7)' : 'rgba(160,110,0,0.5)'; }
+  if(iconType==='coca') { lbl.style.color = got ? 'rgba(255,255,255,0.7)' : 'rgba(180,0,0,0.4)'; }
   lbl.textContent = slotLabel;
 
-  div.append(num, iconEl, lbl);
+  div.append(num, icon, lbl);
 
   if(got) {
-    const chk = document.createElement('div');
-    chk.className = 'slot-check';
-    chk.textContent = '✓';
-    div.appendChild(chk);
+    const chk = document.createElement('div'); chk.className='slot-check'; chk.textContent='✓'; div.appendChild(chk);
   }
 
   div.addEventListener('click', ()=>toggle(id));
+  div.addEventListener('contextmenu', e=>{ e.preventDefault(); toggleDup(id); });
+  div.title = got ? (dup ? 'Repetida (clique direito para remover)' : 'Obtida — clique direito para marcar como repetida') : 'Clique para marcar como obtida';
+
   return div;
 }
 
-/* ── Build team spread ───────────────────── */
 function buildTeam(team) {
-  const col  = team.col;
-  const code = team.code;
-  const ids  = Array.from({length:20},(_,i)=>`${code}${String(i+1).padStart(2,'0')}`);
-  const got  = ids.filter(id=>obtained.has(id)).length;
+  const col = team.col, code = team.code;
+  const ids = Array.from({length:20},(_,i)=>`${code}${String(i+1).padStart(2,'0')}`);
+  const got = ids.filter(id=>obtained.has(id)).length;
   const done = got===20;
-  const pn   = PAGES.findIndex(p=>p.id===code); // 1-based page number relative
+  const pn = PAGES.findIndex(p=>p.id===code);
 
   /* LEFT PAGE */
   const L = document.createElement('div');
-  L.className = 'page page-l';
+  L.className = 'book-page book-page-l';
 
-  // Header
   const hdr = document.createElement('div');
-  hdr.className = 'phdr-team';
+  hdr.className = 'phdr';
   hdr.style.background = col;
+  const hflag = mkFlag(team.fi, 'fi fi-hdr phdr-flag');
+  const htxt = document.createElement('div'); htxt.className='phdr-text';
+  htxt.innerHTML=`<div class="phdr-we">WE ARE</div><div class="phdr-name">${team.name.toUpperCase()}</div>`;
+  const hbadge = document.createElement('div'); hbadge.className='phdr-badge';
+  hbadge.innerHTML=`<span class="phdr-grp">GRP ${team.grp}</span><span class="phdr-prog" style="color:${done?'#b2ffb8':'rgba(255,255,255,0.9)'}">${got}/20</span>`;
+  hdr.append(hflag, htxt, hbadge);
 
-  const hdrFlag = mkFlag(team.fi, 'phdr-team-flag fi-lg');
-  const hdrText = document.createElement('div');
-  hdrText.className = 'phdr-team-text';
-  hdrText.innerHTML = `<div class="phdr-team-we">WE ARE</div><div class="phdr-team-name">${team.name.toUpperCase()}</div>`;
-  const hdrBadge = document.createElement('div');
-  hdrBadge.className = 'phdr-team-badge';
-  hdrBadge.innerHTML = `<span class="phdr-team-grp">GRP ${team.grp}</span><span class="phdr-team-prog" style="color:${done?'#b2ffb8':'rgba(255,255,255,0.85)'}">${got}/20</span>`;
-  hdr.append(hdrFlag, hdrText, hdrBadge);
-
-  // Left grid: S1–S10
-  const gl = document.createElement('div');
-  gl.className = 'sgrid sgrid-tl';
-
-  const leftDef = [
-    [1,'s1','badge','Brasão'],
-    [2,'s2','player',`Jog. 2`],
-    [3,'s3','player',`Jog. 3`],
-    [4,'s4','player',`Jog. 4`],
-    [5,'s5','player',`Jog. 5`],
-    [6,'s6','player',`Jog. 6`],
-    [7,'s7','player',`Jog. 7`],
-    [8,'s8','player',`Jog. 8`],
-    [9,'s9','player',`Jog. 9`],
-    [10,'s10','player',`Jog. 10`],
+  const gl = document.createElement('div'); gl.className='sgrid sgrid-tl';
+  const leftDef=[
+    [1,'s1','badge','Brasão'],[2,'s2','player','Jog. 2'],[3,'s3','player','Jog. 3'],
+    [4,'s4','player','Jog. 4'],[5,'s5','player','Jog. 5'],[6,'s6','player','Jog. 6'],
+    [7,'s7','player','Jog. 7'],[8,'s8','player','Jog. 8'],[9,'s9','player','Jog. 9'],
+    [10,'s10','player','Jog. 10'],
   ];
+  leftDef.forEach(([n,area,it,lbl])=>gl.appendChild(mkSlot(`${code}${String(n).padStart(2,'0')}`,`${code} ${n}`,'',it,lbl,col,area)));
 
-  leftDef.forEach(([n,area,itype,slbl])=>{
-    const id = `${code}${String(n).padStart(2,'0')}`;
-    const slot = mkSlot(id, `${code} ${n}`, '', itype, slbl, col, area);
-    gl.appendChild(slot);
-  });
-
-  // Page number
-  const pnL = document.createElement('div');
-  pnL.className = 'page-num page-num-l';
-  pnL.textContent = `${pn*2-1}`;
-
-  L.append(hdr, gl, pnL);
+  const pnL = document.createElement('div'); pnL.className='page-num page-num-l'; pnL.textContent=pn*2-1;
+  L.append(hdr,gl,pnL);
 
   /* RIGHT PAGE */
-  const R = document.createElement('div');
-  R.className = 'page page-r';
-
-  const spacer = document.createElement('div');
-  spacer.className = 'phdr-spacer';
-
-  const gr = document.createElement('div');
-  gr.className = 'sgrid sgrid-tr';
-
-  const rightDef = [
-    [11,'s11','player',`Jog. 11`],
-    [12,'s12','player',`Jog. 12`],
-    [13,'s13','photo','Foto Equipe'],
-    [14,'s14','player',`Jog. 14`],
-    [15,'s15','player',`Jog. 15`],
-    [16,'s16','player',`Jog. 16`],
-    [17,'s17','player',`Jog. 17`],
-    [18,'s18','player',`Jog. 18`],
-    [19,'s19','player',`Jog. 19`],
-    [20,'s20','player',`Jog. 20`],
+  const R = document.createElement('div'); R.className='book-page book-page-r';
+  const spacer = document.createElement('div'); spacer.className='phdr-spacer';
+  const gr = document.createElement('div'); gr.className='sgrid sgrid-tr';
+  const rightDef=[
+    [11,'s11','player','Jog. 11'],[12,'s12','player','Jog. 12'],[13,'s13','photo','Foto Equipe'],
+    [14,'s14','player','Jog. 14'],[15,'s15','player','Jog. 15'],[16,'s16','player','Jog. 16'],
+    [17,'s17','player','Jog. 17'],[18,'s18','player','Jog. 18'],[19,'s19','player','Jog. 19'],
+    [20,'s20','player','Jog. 20'],
   ];
+  rightDef.forEach(([n,area,it,lbl])=>gr.appendChild(mkSlot(`${code}${String(n).padStart(2,'0')}`,`${code} ${n}`,'',it,lbl,col,area)));
 
-  rightDef.forEach(([n,area,itype,slbl])=>{
-    const id = `${code}${String(n).padStart(2,'0')}`;
-    const slot = mkSlot(id, `${code} ${n}`, '', itype, slbl, col, area);
-    gr.appendChild(slot);
+  // Group card
+  const gc = document.createElement('div'); gc.className='grp-card'; gc.style.gridArea='grp';
+  const gcl = document.createElement('div'); gcl.className='grp-card-lbl'; gcl.textContent=`GRUPO ${team.grp}`;
+  const gcf = document.createElement('div'); gcf.className='grp-flags';
+  TEAMS.filter(t=>t.grp===team.grp).forEach(t=>{
+    const f = mkFlag(t.fi, `fi grp-flag fi-grp${t.code===code?' active':''}`);
+    f.title = t.name; gcf.appendChild(f);
   });
+  gc.append(gcl,gcf); gr.appendChild(gc);
 
-  const grpTeams = TEAMS.filter(t=>t.grp===team.grp);
-  const gc = document.createElement('div');
-  gc.className = 'grp-card';
-  gc.style.gridArea = 'grp';
+  const pnR = document.createElement('div'); pnR.className='page-num page-num-r'; pnR.textContent=pn*2;
+  R.append(spacer,gr,pnR);
 
-  const gcLbl = document.createElement('div');
-  gcLbl.className = 'grp-card-label';
-  gcLbl.textContent = `GRUPO ${team.grp}`;
-
-  const gcFlags = document.createElement('div');
-  gcFlags.className = 'grp-flags';
-  grpTeams.forEach(t=>{
-    const f = mkFlag(t.fi, 'grp-flag fi' + (t.code===code?' active':''));
-    f.title = t.name;
-    gcFlags.appendChild(f);
-  });
-
-  gc.append(gcLbl, gcFlags);
-  gr.appendChild(gc);
-
-  const pnR = document.createElement('div');
-  pnR.className = 'page-num page-num-r';
-  pnR.textContent = `${pn*2}`;
-
-  R.append(spacer, gr, pnR);
-
-  return [L, R];
+  return [L,R];
 }
 
-/* ── Build special spread ─────────────────── */
 function buildSpecial(sp) {
-  const ids   = sp.stickers.map(s=>s.id);
-  const got   = ids.filter(id=>obtained.has(id)).length;
-  const half  = Math.ceil(sp.stickers.length / 2);
-  const leftS  = sp.stickers.slice(0, half);
-  const rightS = sp.stickers.slice(half);
+  const ids = sp.stickers.map(s=>s.id);
+  const got = ids.filter(id=>obtained.has(id)).length;
+  const half = Math.ceil(sp.stickers.length/2);
 
-  function makeSide(stickers, isLeft) {
+  function makeHalf(stickers, isLeft) {
     const P = document.createElement('div');
-    P.className = 'page ' + (isLeft?'page-l':'page-r');
-
-    if(isLeft) {
-      const hdr = document.createElement('div');
-      hdr.className = 'phdr-special';
-      hdr.innerHTML = `
-        <div class="phdr-special-eyebrow">${sp.eyebrow}</div>
-        <div class="phdr-special-title">${sp.icon} ${sp.label.toUpperCase()}</div>
-        <div class="phdr-special-sub">
-          <span>FIFA World Cup 2026™</span>
-          <span>${got}/${sp.stickers.length}</span>
-        </div>`;
+    P.className='book-page '+(isLeft?'book-page-l':'book-page-r');
+    if(isLeft){
+      const hdr=document.createElement('div'); hdr.className='phdr-special';
+      hdr.innerHTML=`<div class="phdr-sp-eyebrow">${sp.eyebrow}</div><div class="phdr-sp-title">${sp.icon} ${sp.label.toUpperCase()}</div><div class="phdr-sp-sub"><span>FIFA World Cup 2026™</span><span>${got}/${sp.stickers.length}</span></div>`;
       P.appendChild(hdr);
     } else {
-      const sp2 = document.createElement('div');
-      sp2.className = 'phdr-spacer';
-      P.appendChild(sp2);
+      const s=document.createElement('div'); s.className='phdr-spacer'; P.appendChild(s);
     }
-
-    const grid = document.createElement('div');
-    grid.className = 'sgrid sgrid-sp';
-
-    stickers.forEach(s=>{
-      grid.appendChild(mkSlot(s.id, s.lbl, s.type, s.type, s.type==='fwc'?'Especial':'Coca-Cola', null, null));
-    });
-
+    const grid=document.createElement('div'); grid.className='sgrid sgrid-sp';
+    stickers.forEach(s=>grid.appendChild(mkSlot(s.id,s.lbl,s.type,s.type,s.type==='fwc'?'Especial':'Coca-Cola',null,null)));
     P.appendChild(grid);
     return P;
   }
 
-  return [makeSide(leftS,true), makeSide(rightS,false)];
+  return [makeHalf(sp.stickers.slice(0,half),true), makeHalf(sp.stickers.slice(half),false)];
 }
 
-/* ── Selector ────────────────────────────── */
-function buildSelector() {
-  const inner = document.getElementById('selInner');
-  inner.innerHTML = '';
-
-  // Special pages
-  const sh = document.createElement('div');
-  sh.className = 'sel-section-hd';
-  sh.textContent = 'PÁGINAS ESPECIAIS';
-  inner.appendChild(sh);
-
-  const sr = document.createElement('div');
-  sr.className = 'sel-specials';
-  PAGES.forEach((p,i)=>{
-    if(p.type==='team') return;
-    const got = pageStickerIds(p).filter(id=>obtained.has(id)).length;
-    const tot = pageStickerIds(p).length;
-    const btn = document.createElement('button');
-    btn.className = 'sel-sp-btn' + (i===curPage?' active':'');
-    const pr = document.createElement('span');
-    pr.className = 'sel-sp-prog';
-    pr.textContent = `${got}/${tot}`;
-    btn.innerHTML = `${p.icon} ${p.label} `;
-    btn.appendChild(pr);
-    btn.addEventListener('click',()=>{ curPage=i; selOpen=false; render(); });
-    sr.appendChild(btn);
-  });
-  inner.appendChild(sr);
-
-  // Teams by group
-  const th = document.createElement('div');
-  th.className = 'sel-section-hd';
-  th.textContent = 'SELEÇÕES';
-  inner.appendChild(th);
-
-  'ABCDEFGHIJKL'.split('').forEach(g=>{
-    const row = document.createElement('div');
-    row.className = 'sel-grp-row';
-    const lbl = document.createElement('div');
-    lbl.className = 'sel-grp-lbl';
-    lbl.textContent = 'GRP '+g;
-    row.appendChild(lbl);
-
-    const wrap = document.createElement('div');
-    wrap.className = 'sel-teams';
-
-    TEAMS.filter(t=>t.grp===g).forEach(t=>{
-      const pi  = PAGES.findIndex(p=>p.id===t.code);
-      const got = pageStickerIds(PAGES[pi]).filter(id=>obtained.has(id)).length;
-      const done = got===20;
-
-      const btn = document.createElement('button');
-      btn.className = 'sel-t' + (pi===curPage?' active':'');
-      btn.title = t.name;
-
-      const f = mkFlag(t.fi, 'sel-t-flag fi');
-      const p2 = document.createElement('div');
-      p2.className = 'sel-t-prog' + (done?' done':'');
-      p2.textContent = `${got}/20`;
-
-      btn.append(f,p2);
-      btn.addEventListener('click',()=>{ curPage=pi; selOpen=false; render(); });
-      wrap.appendChild(btn);
-    });
-
-    row.appendChild(wrap);
-    inner.appendChild(row);
-  });
-}
-
-/* ── Main render ──────────────────────────── */
-function render() {
-  const page = PAGES[curPage];
+function renderAlbum() {
+  const page  = PAGES[curPage];
   const isTeam = page.type==='team';
-  const sids = pageStickerIds(page);
-  const got  = sids.filter(id=>obtained.has(id)).length;
-  const tot  = sids.length;
-  const pct  = Math.round(obtained.size/TOTAL*100);
+  const sids  = pageStickerIds(page);
+  const got   = sids.filter(id=>obtained.has(id)).length;
+  const tot   = sids.length;
+  const pct   = Math.round(obtained.size/TOTAL*100);
 
-  /* HUD */
-  document.getElementById('hudGot').textContent   = obtained.size;
+  // HUD
+  document.getElementById('hudGot').textContent  = obtained.size;
   document.getElementById('hudTotal').textContent = TOTAL;
-  document.getElementById('hudPct').textContent   = pct+'%';
   document.getElementById('hudFill').style.width  = pct+'%';
+  document.getElementById('hudPct').textContent   = pct+'%';
 
-  /* Nav */
+  // Prev/Next
   document.getElementById('btnPrev').disabled = curPage===0;
   document.getElementById('btnNext').disabled = curPage===PAGES.length-1;
 
-  /* Picker button */
-  const cpFlagEl = document.getElementById('cpFlag');
-  if(isTeam) {
-    cpFlagEl.className = `fi fi-${page.team.fi} cp-flag fi-md`;
-    document.getElementById('cpName').textContent = page.team.name;
-    document.getElementById('cpMeta').textContent = `Grupo ${page.team.grp} · ${got}/${tot}`;
+  // Picker button
+  const fw = document.getElementById('pickerFlagWrap');
+  fw.innerHTML='';
+  if(isTeam){
+    fw.appendChild(mkFlag(page.team.fi, 'fi fi-pick'));
+    document.getElementById('pickerName').textContent = page.team.name;
+    document.getElementById('pickerMeta').textContent = `Grupo ${page.team.grp} · ${got}/${tot}`;
   } else {
-    cpFlagEl.className = 'cp-flag';
-    cpFlagEl.style.cssText = 'font-size:24px;width:auto;height:auto;box-shadow:none;background:none;';
-    cpFlagEl.textContent = page.icon;
-    document.getElementById('cpName').textContent = page.label;
-    document.getElementById('cpMeta').textContent = `${got}/${tot} figurinhas`;
+    const sp=document.createElement('span'); sp.style.cssText='font-size:22px;'; sp.textContent=page.icon;
+    fw.appendChild(sp);
+    document.getElementById('pickerName').textContent = page.label;
+    document.getElementById('pickerMeta').textContent = `${got}/${tot} figurinhas`;
   }
-  document.getElementById('cpChevron').textContent = selOpen?'▲':'▼';
-  document.getElementById('btnPicker').classList.toggle('open', selOpen);
-  document.getElementById('selectorPanel').classList.toggle('open', selOpen);
-  if(selOpen) buildSelector();
+  document.getElementById('pickerProg').textContent = `${got}/${tot}`;
+  document.getElementById('pickerChevron').textContent = dropOpen?'▲':'▼';
+  document.getElementById('pickerBtn').classList.toggle('open', dropOpen);
+  document.getElementById('pickerDropdown').classList.toggle('open', dropOpen);
+  if(dropOpen) buildDropdown();
 
-  /* Spread */
-  const album = document.getElementById('album');
-  // Keep spine, rebuild left/right
+  // Book pages
+  const book = document.getElementById('book');
   const oldL = document.getElementById('pageL');
   const oldR = document.getElementById('pageR');
-
   let newL, newR;
-  if(isTeam) {
-    [newL, newR] = buildTeam(page.team);
-  } else {
-    [newL, newR] = buildSpecial(page);
-  }
-
-  newL.id = 'pageL';
-  newR.id = 'pageR';
-
-  oldL.replaceWith(newL);
-  oldR.replaceWith(newR);
+  if(isTeam) [newL,newR] = buildTeam(page.team);
+  else [newL,newR] = buildSpecial(page);
+  newL.id='pageL'; newR.id='pageR';
+  oldL.replaceWith(newL); oldR.replaceWith(newR);
 }
 
-/* ── Events ─────────────────────────────── */
-document.getElementById('btnPrev').addEventListener('click', ()=>{
-  if(curPage>0){ curPage--; selOpen=false; render(); }
-});
-document.getElementById('btnNext').addEventListener('click', ()=>{
-  if(curPage<PAGES.length-1){ curPage++; selOpen=false; render(); }
-});
-document.getElementById('btnPicker').addEventListener('click', ()=>{
-  selOpen=!selOpen; render();
-});
+/* ─── Dropdown ───────────────────────────── */
+function buildDropdown() {
+  const inner = document.createElement('div');
+  inner.className = 'pd-inner';
 
-document.getElementById('btnMark').addEventListener('click', ()=>{
-  pageStickerIds(PAGES[curPage]).forEach(id=>obtained.add(id));
-  save(); render();
-});
-document.getElementById('btnUnmark').addEventListener('click', ()=>{
-  pageStickerIds(PAGES[curPage]).forEach(id=>obtained.delete(id));
-  save(); render();
-});
+  // Specials
+  const sh = document.createElement('div'); sh.className='pd-section-hd'; sh.textContent='ESPECIAIS';
+  const sr = document.createElement('div'); sr.className='pd-specials';
+  PAGES.forEach((p,i)=>{
+    if(p.type==='team') return;
+    const g=pageStickerIds(p).filter(id=>obtained.has(id)).length;
+    const t=pageStickerIds(p).length;
+    const btn=document.createElement('button');
+    btn.className='pd-sp-btn'+(i===curPage?' active':'');
+    const pr=document.createElement('span'); pr.className='pd-sp-prog'; pr.textContent=`${g}/${t}`;
+    btn.innerHTML=`${p.icon} ${p.label} `; btn.appendChild(pr);
+    btn.addEventListener('click',()=>{ curPage=i; dropOpen=false; renderAlbum(); });
+    sr.appendChild(btn);
+  });
+  inner.append(sh,sr);
 
-document.getElementById('resetBtn').addEventListener('click', ()=>{
-  document.getElementById('confirmOverlay').style.display='flex';
-});
-document.getElementById('confirmYes').addEventListener('click', ()=>{
-  obtained.clear(); save();
-  document.getElementById('confirmOverlay').style.display='none';
-  render();
-});
-document.getElementById('confirmNo').addEventListener('click', ()=>{
-  document.getElementById('confirmOverlay').style.display='none';
-});
+  // Teams
+  const th=document.createElement('div'); th.className='pd-section-hd'; th.textContent='SELEÇÕES';
+  inner.appendChild(th);
 
-document.addEventListener('click', e=>{
-  const wrap = document.getElementById('pickerWrap');
-  if(selOpen && !wrap.contains(e.target)){ selOpen=false; render(); }
-});
+  'ABCDEFGHIJKL'.split('').forEach(g=>{
+    const row=document.createElement('div'); row.className='pd-grp-row';
+    const lbl=document.createElement('div'); lbl.className='pd-grp-lbl'; lbl.textContent='GRP '+g;
+    const wrap=document.createElement('div'); wrap.className='pd-teams';
+    TEAMS.filter(t=>t.grp===g).forEach(t=>{
+      const pi=PAGES.findIndex(p=>p.id===t.code);
+      const got=pageStickerIds(PAGES[pi]).filter(id=>obtained.has(id)).length;
+      const done=got===20;
+      const btn=document.createElement('button');
+      btn.className='pd-team'+(pi===curPage?' active':'');
+      btn.title=t.name;
+      const f=mkFlag(t.fi,'fi fi-sel pd-team-flag');
+      const p2=document.createElement('div');
+      p2.className='pd-team-prog'+(done?' done':'');
+      p2.textContent=`${got}/20`;
+      btn.append(f,p2);
+      btn.addEventListener('click',()=>{ curPage=pi; dropOpen=false; renderAlbum(); });
+      wrap.appendChild(btn);
+    });
+    row.append(lbl,wrap); inner.appendChild(row);
+  });
 
-document.addEventListener('keydown', e=>{
-  if(e.key==='ArrowLeft'  && curPage>0){ curPage--; selOpen=false; render(); }
-  if(e.key==='ArrowRight' && curPage<PAGES.length-1){ curPage++; selOpen=false; render(); }
-  if(e.key==='Escape' && selOpen){ selOpen=false; render(); }
-});
+  const dd=document.getElementById('pickerDropdown');
+  dd.innerHTML='';
+  dd.appendChild(inner);
+}
 
-/* ── Init ───────────────────────────────── */
+/* ─── Trocas ─────────────────────────────── */
+function renderTrocas() {
+  const dupIds  = [...duplicates];
+  const wantIds = PAGES.filter(p=>p.type==='team').flatMap(p=>pageStickerIds(p)).filter(id=>!obtained.has(id)).slice(0,60);
+
+  document.getElementById('dupCount').textContent  = dupIds.length + ' figurinhas';
+  document.getElementById('wantCount').textContent = wantIds.length + ' figurinhas';
+
+  function buildChips(ids, cls) {
+    const frag = document.createDocumentFragment();
+    if(!ids.length) {
+      const e=document.createElement('div'); e.className='empty-state';
+      e.innerHTML='<span>📭</span><p>Nenhuma figurinha aqui ainda</p>';
+      frag.appendChild(e); return frag;
+    }
+    ids.slice(0,80).forEach(id=>{
+      const code = id.slice(0,-2);
+      const t = TEAMS.find(t=>t.code===code);
+      if(!t) return;
+      const chip=document.createElement('div');
+      chip.className='tc-chip '+cls;
+      const f=mkFlag(t.fi,'fi tc-chip-flag'); f.style.cssText='width:18px;height:13px;border-radius:2px;';
+      const txt=document.createElement('span'); txt.textContent=id;
+      chip.append(f,txt);
+      chip.title = cls==='tc-chip-dup' ? 'Clique para remover das repetidas' : t.name;
+      if(cls==='tc-chip-dup') chip.addEventListener('click',()=>toggleDup(id));
+      frag.appendChild(chip);
+    });
+    return frag;
+  }
+
+  const dl=document.getElementById('dupList');
+  const wl=document.getElementById('wantList');
+  dl.innerHTML=''; wl.innerHTML='';
+  dl.appendChild(buildChips(dupIds,'tc-chip-dup'));
+  wl.appendChild(buildChips(wantIds,'tc-chip-want'));
+}
+
+/* ─── Vendas ─────────────────────────────── */
+function renderVendas() {
+  const price = parseFloat(document.getElementById('defaultPrice').value)||2;
+  const dupIds = [...duplicates];
+
+  const saleList = document.getElementById('saleList');
+  const totalRow = document.getElementById('saleTotalRow');
+  const totalEl  = document.getElementById('saleTotal');
+
+  saleList.innerHTML='';
+  if(!dupIds.length) {
+    saleList.innerHTML='<div class="empty-state"><span>💸</span><p>Marque figurinhas como repetidas na seção de Trocas para listá-las aqui</p></div>';
+    totalRow.style.display='none';
+    return;
+  }
+
+  const frag=document.createDocumentFragment();
+  dupIds.forEach(id=>{
+    const code=id.slice(0,-2);
+    const t=TEAMS.find(t=>t.code===code);
+    if(!t) return;
+    const chip=document.createElement('div'); chip.className='sale-chip';
+    const f=mkFlag(t.fi,'fi'); f.style.cssText='width:18px;height:13px;border-radius:2px;';
+    const txt=document.createElement('span'); txt.textContent=id;
+    const pr=document.createElement('span'); pr.style.cssText='margin-left:4px;opacity:.7;font-size:10px;'; pr.textContent=`R$${price.toFixed(2)}`;
+    chip.append(f,txt,pr);
+    frag.appendChild(chip);
+  });
+  saleList.appendChild(frag);
+
+  totalRow.style.display='flex';
+  totalEl.textContent=`R$ ${(dupIds.length*price).toFixed(2)}`;
+
+  // Mock market
+  renderMarket();
+}
+
+function renderMarket() {
+  const ml=document.getElementById('marketList');
+  const demoSellers=[
+    { name:'Carlos M.', city:'São Paulo, SP', fi:'br', stickers:['BRA05','BRA11','ARG03','ARG07'], price:3.0 },
+    { name:'João R.',   city:'Rio de Janeiro, RJ', fi:'br', stickers:['MEX01','MEX13','BRA15'], price:2.5 },
+    { name:'Lucas S.',  city:'Belo Horizonte, MG', fi:'br', stickers:['ARG01','ARG20','FRA08','FRA12'], price:4.0 },
+    { name:'Gabriel F.',city:'Curitiba, PR',        fi:'br', stickers:['ENG01','ENG13','POR07'], price:3.5 },
+  ];
+  ml.innerHTML='';
+  demoSellers.forEach(s=>{
+    const item=document.createElement('div'); item.className='market-item';
+    const mh=document.createElement('div'); mh.className='mi-header';
+    const mf=mkFlag(s.fi,'fi'); mf.style.cssText='width:20px;height:15px;border-radius:2px;flex-shrink:0;';
+    const mn=document.createElement('div'); mn.className='mi-name'; mn.textContent=s.name;
+    const mp=document.createElement('div'); mp.className='mi-price'; mp.textContent=`R$${s.price.toFixed(2)} /fig`;
+    mh.append(mf,mn,mp);
+    const ms=document.createElement('div'); ms.className='mi-stickers';
+    s.stickers.forEach(st=>{ const c=document.createElement('div'); c.className='mi-stk'; c.textContent=st; ms.appendChild(c); });
+    const mc=document.createElement('div'); mc.className='mi-contact';
+    const mu=document.createElement('div'); mu.className='mi-user'; mu.textContent=`📍 ${s.city}`;
+    const mb=document.createElement('button'); mb.className='mi-btn'; mb.textContent='Contatar';
+    mb.addEventListener('click',()=>alert(`Contato com ${s.name} (demo — sem backend)`));
+    mc.append(mu,mb);
+    item.append(mh,ms,mc);
+    ml.appendChild(item);
+  });
+}
+
+/* ─── Inner Circle ───────────────────────── */
+const DEMO_NEARBY = [
+  { name:'Carlos M.',  city:'São Paulo, SP',         dist:1.2,  has:['BRA05','BRA11','ARG03'],  wants:['BRA01','FRA07'], match:'gold'  },
+  { name:'Fernanda L.',city:'São Paulo, SP',          dist:2.8,  has:['MEX01','ESP13'],           wants:['ARG01','BRA20'], match:'green' },
+  { name:'Rafael T.',  city:'Santo André, SP',        dist:5.5,  has:['ARG01','ARG20','FRA08'],   wants:['BRA11','ESP03'], match:'blue'  },
+  { name:'Ana P.',     city:'São Bernardo do Campo',  dist:7.1,  has:['BRA07','BRA14'],           wants:['MEX13'],        match:'green' },
+  { name:'Lucas S.',   city:'Osasco, SP',             dist:3.3,  has:['ENG01','POR07'],           wants:['BRA05','BRA06'],match:'blue'  },
+  { name:'Julia M.',   city:'Guarulhos, SP',          dist:8.4,  has:['FRA01','FRA13','BRA19'],   wants:['ARG07','ESP08'],match:'gold'  },
+  { name:'Thiago B.',  city:'São Paulo, SP',          dist:0.9,  has:['MEX05','MEX11'],           wants:['BRA13'],        match:'green' },
+  { name:'Camila R.',  city:'Diadema, SP',            dist:9.8,  has:['BRA03','ARG11'],           wants:['FRA01','FRA20'],match:'blue'  },
+];
+
+function renderInnerCircle(radiusKm) {
+  const list = DEMO_NEARBY.filter(u=>u.dist<=radiusKm).sort((a,b)=>a.dist-b.dist);
+
+  // Radar dots
+  const dotsEl = document.getElementById('radarDots');
+  dotsEl.innerHTML='';
+  list.forEach(u=>{
+    const angle = Math.random()*360 * (Math.PI/180);
+    const r = (u.dist/radiusKm)*45; // % from center
+    const x = 50 + r*Math.cos(angle);
+    const y = 50 + r*Math.sin(angle);
+    const dot=document.createElement('div');
+    dot.className=`radar-dot radar-dot-${u.match==='gold'?'gold':u.match==='green'?'green':'blue'}`;
+    dot.style.left=x+'%'; dot.style.top=y+'%';
+    dot.title=u.name;
+    dotsEl.appendChild(dot);
+  });
+
+  // Nearby cards
+  const listEl=document.getElementById('icNearbyList');
+  listEl.innerHTML='';
+
+  if(!list.length){
+    listEl.innerHTML='<div class="empty-state"><span>🔍</span><p>Nenhum colecionador encontrado neste raio. Aumente o raio.</p></div>';
+    return;
+  }
+
+  list.forEach(u=>{
+    const card=document.createElement('div');
+    card.className=`nearby-card match-${u.match}`;
+
+    const av=document.createElement('div');
+    av.className=`nc-avatar ${u.match}`;
+    av.textContent=u.name[0];
+
+    const info=document.createElement('div'); info.className='nc-info';
+    const nm=document.createElement('div'); nm.className='nc-name'; nm.textContent=u.name;
+    const cy=document.createElement('div'); cy.className='nc-city'; cy.textContent=`📍 ${u.city}`;
+
+    const badges=document.createElement('div'); badges.className='nc-match-row';
+    if(u.has.length){
+      const b=document.createElement('span'); b.className='nc-badge nc-badge-green';
+      b.textContent=`✓ Tem ${u.has.length} das suas faltantes`; badges.appendChild(b);
+    }
+    if(u.wants.length){
+      const b=document.createElement('span'); b.className='nc-badge nc-badge-blue';
+      b.textContent=`⭐ Quer ${u.wants.length} das suas repetidas`; badges.appendChild(b);
+    }
+    if(u.match==='gold'){
+      const b=document.createElement('span'); b.className='nc-badge nc-badge-gold';
+      b.textContent='🔥 Troca Perfeita!'; badges.appendChild(b);
+    }
+
+    const act=document.createElement('div'); act.className='nc-action';
+    const btn=document.createElement('button'); btn.className='nc-contact-btn';
+    btn.textContent='💬 Solicitar Troca';
+    btn.addEventListener('click',()=>alert(`Enviando solicitação de troca para ${u.name}...\n(Funcionalidade com backend necessária para envio real)`));
+    act.appendChild(btn);
+
+    info.append(nm,cy,badges,act);
+
+    const dist=document.createElement('div'); dist.className='nc-dist'; dist.textContent=`${u.dist.toFixed(1)} km`;
+
+    card.append(av,info,dist);
+    listEl.appendChild(card);
+  });
+}
+
+/* ─── Nav badges ─────────────────────────── */
+function updateBadges() {
+  const pct = Math.round(obtained.size/TOTAL*100);
+  document.getElementById('navAlbumBadge').textContent  = pct+'%';
+  document.getElementById('navTrocasBadge').textContent = duplicates.size;
+  document.getElementById('navVendasBadge').textContent = duplicates.size;
+}
+
+/* ─── Section switching ─────────────────── */
+function switchSection(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.snav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById(`section${id.charAt(0).toUpperCase()+id.slice(1)}`).classList.add('active');
+  document.querySelector(`[data-section="${id}"]`).classList.add('active');
+
+  if(id==='trocas') renderTrocas();
+  if(id==='vendas') renderVendas();
+  if(id==='circle') {
+    const r=parseInt(document.getElementById('radiusSlider').value)||10;
+    document.getElementById('icRadius').textContent=`raio: ${r} km`;
+    renderInnerCircle(r);
+    if(profile.name) {
+      document.getElementById('icName').value=profile.name;
+      document.getElementById('icCity').value=profile.city;
+    }
+  }
+}
+
+/* ─── Profile ────────────────────────────── */
+function updateProfileUI() {
+  if(profile.name) {
+    document.getElementById('spName').textContent = profile.name;
+    document.getElementById('spCity').textContent = profile.city||'Sem cidade';
+    document.getElementById('spAvatar').textContent = profile.name[0].toUpperCase();
+  }
+}
+
+/* ─── Events ─────────────────────────────── */
+function bindEvents() {
+  document.getElementById('btnPrev').addEventListener('click',()=>{ if(curPage>0){curPage--;dropOpen=false;renderAlbum();} });
+  document.getElementById('btnNext').addEventListener('click',()=>{ if(curPage<PAGES.length-1){curPage++;dropOpen=false;renderAlbum();} });
+  document.getElementById('pickerBtn').addEventListener('click',()=>{ dropOpen=!dropOpen; renderAlbum(); });
+
+  document.getElementById('btnMark').addEventListener('click',()=>{
+    pageStickerIds(PAGES[curPage]).forEach(id=>obtained.add(id));
+    save(); renderAlbum(); updateBadges(); renderTrocas(); renderVendas();
+  });
+  document.getElementById('btnUnmark').addEventListener('click',()=>{
+    pageStickerIds(PAGES[curPage]).forEach(id=>{ obtained.delete(id); duplicates.delete(id); });
+    save(); renderAlbum(); updateBadges(); renderTrocas(); renderVendas();
+  });
+
+  document.getElementById('resetBtn').addEventListener('click',()=>{
+    document.getElementById('confirmModal').style.display='flex';
+  });
+  document.getElementById('confirmYes').addEventListener('click',()=>{
+    obtained.clear(); duplicates.clear(); save();
+    document.getElementById('confirmModal').style.display='none';
+    renderAlbum(); updateBadges(); renderTrocas(); renderVendas();
+  });
+  document.getElementById('confirmNo').addEventListener('click',()=>{
+    document.getElementById('confirmModal').style.display='none';
+  });
+
+  // Nav
+  document.querySelectorAll('.snav-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>switchSection(btn.dataset.section));
+  });
+
+  // Profile sidebar click
+  document.getElementById('sidebarProfile').addEventListener('click',()=>{
+    document.getElementById('modalName').value = profile.name||'';
+    document.getElementById('modalCity').value = profile.city||'';
+    document.getElementById('profileModal').style.display='flex';
+  });
+  document.getElementById('modalSave').addEventListener('click',()=>{
+    profile.name = document.getElementById('modalName').value.trim();
+    profile.city = document.getElementById('modalCity').value.trim();
+    save(); updateProfileUI();
+    document.getElementById('profileModal').style.display='none';
+  });
+  document.getElementById('modalCancel').addEventListener('click',()=>{
+    document.getElementById('profileModal').style.display='none';
+  });
+
+  // Close dropdown on outside click
+  document.addEventListener('click',e=>{
+    const pw=document.getElementById('pickerWrap');
+    if(dropOpen && !pw.contains(e.target)){ dropOpen=false; renderAlbum(); }
+  });
+
+  // Keyboard nav
+  document.addEventListener('keydown',e=>{
+    if(e.key==='ArrowLeft'  && curPage>0)             { curPage--; dropOpen=false; renderAlbum(); }
+    if(e.key==='ArrowRight' && curPage<PAGES.length-1){ curPage++; dropOpen=false; renderAlbum(); }
+    if(e.key==='Escape'){ dropOpen=false; renderAlbum(); }
+  });
+
+  // Price change
+  document.getElementById('defaultPrice').addEventListener('change',()=>renderVendas());
+
+  // Radius slider
+  document.getElementById('radiusSlider').addEventListener('input',e=>{
+    const r=parseInt(e.target.value);
+    document.getElementById('icRadius').textContent=`raio: ${r} km`;
+    renderInnerCircle(r);
+  });
+
+  // IC save profile
+  document.getElementById('icSaveProfile').addEventListener('click',()=>{
+    const nm=document.getElementById('icName').value.trim();
+    const cy=document.getElementById('icCity').value.trim();
+    if(!nm){ alert('Digite seu nome'); return; }
+    profile.name=nm; profile.city=cy; save(); updateProfileUI();
+    document.getElementById('icLocStatus').textContent='⏳ Obtendo localização...';
+    if(navigator.geolocation){
+      navigator.geolocation.getCurrentPosition(
+        pos=>{ userLat=pos.coords.latitude; userLng=pos.coords.longitude;
+          document.getElementById('icLocStatus').textContent=`✅ Localização ativa — ${cy||'sua cidade'}`;
+          renderInnerCircle(parseInt(document.getElementById('radiusSlider').value)||10);
+        },
+        ()=>{ document.getElementById('icLocStatus').textContent='⚠️ Localização negada — usando dados demo'; }
+      );
+    } else {
+      document.getElementById('icLocStatus').textContent='⚠️ Geolocalização não suportada — usando dados demo';
+    }
+  });
+}
+
+/* ─── Init ───────────────────────────────── */
 load();
-render();
+updateProfileUI();
+renderAlbum();
+updateBadges();
+bindEvents();
+
+// Expose for inline onclick
+window.switchSection = switchSection;
