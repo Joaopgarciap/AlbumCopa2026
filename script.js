@@ -1,604 +1,527 @@
-/* ═══════════════════════════════════════════════
+/* ════════════════════════════════════════════
    Álbum Copa do Mundo 2026 — script.js
-   ═══════════════════════════════════════════════ */
+════════════════════════════════════════════ */
 
-const STORAGE_KEY = 'album-copa-2026-v4';
+const SK = 'copa26-album-v5';
 
-/* ── Teams (48 selections) ─────────────────────── */
+/* ── Teams ──────────────────────────────── */
 const TEAMS = [
-  /* Grupo A */
   { code:'MEX', name:'México',          grp:'A', flag:'🇲🇽', col:'#006847' },
   { code:'RSA', name:'África do Sul',   grp:'A', flag:'🇿🇦', col:'#007749' },
   { code:'KOR', name:'Coreia do Sul',   grp:'A', flag:'🇰🇷', col:'#C60C30' },
-  { code:'CZE', name:'Tchéquia',        grp:'A', flag:'🇨🇿', col:'#D7141A' },
-  /* Grupo B */
+  { code:'CZE', name:'Tchéquia',        grp:'A', flag:'🇨🇿', col:'#B0252A' },
   { code:'CAN', name:'Canadá',          grp:'B', flag:'🇨🇦', col:'#CC0000' },
   { code:'BIH', name:'Bósnia e Herz.',  grp:'B', flag:'🇧🇦', col:'#002395' },
   { code:'QAT', name:'Catar',           grp:'B', flag:'🇶🇦', col:'#8D1B3D' },
-  { code:'SUI', name:'Suíça',           grp:'B', flag:'🇨🇭', col:'#D52B1E' },
-  /* Grupo C */
+  { code:'SUI', name:'Suíça',           grp:'B', flag:'🇨🇭', col:'#C8242C' },
   { code:'BRA', name:'Brasil',          grp:'C', flag:'🇧🇷', col:'#009C3B' },
   { code:'MAR', name:'Marrocos',        grp:'C', flag:'🇲🇦', col:'#C1272D' },
   { code:'HAI', name:'Haiti',           grp:'C', flag:'🇭🇹', col:'#00209F' },
   { code:'SCO', name:'Escócia',         grp:'C', flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', col:'#003DA5' },
-  /* Grupo D */
-  { code:'USA', name:'EUA',             grp:'D', flag:'🇺🇸', col:'#002868' },
-  { code:'PAR', name:'Paraguai',        grp:'D', flag:'🇵🇾', col:'#D52B1E' },
+  { code:'USA', name:'EUA',             grp:'D', flag:'🇺🇸', col:'#1B3A6B' },
+  { code:'PAR', name:'Paraguai',        grp:'D', flag:'🇵🇾', col:'#C8242C' },
   { code:'AUS', name:'Austrália',       grp:'D', flag:'🇦🇺', col:'#003580' },
   { code:'TUR', name:'Turquia',         grp:'D', flag:'🇹🇷', col:'#E30A17' },
-  /* Grupo E */
   { code:'GER', name:'Alemanha',        grp:'E', flag:'🇩🇪', col:'#2B2B2B' },
   { code:'CUW', name:'Curaçao',         grp:'E', flag:'🇨🇼', col:'#003DA5' },
-  { code:'CIV', name:'Costa do Marfim', grp:'E', flag:'🇨🇮', col:'#E07000' },
+  { code:'CIV', name:'Costa do Marfim', grp:'E', flag:'🇨🇮', col:'#D07000' },
   { code:'ECU', name:'Equador',         grp:'E', flag:'🇪🇨', col:'#0038A8' },
-  /* Grupo F */
   { code:'NED', name:'Países Baixos',   grp:'F', flag:'🇳🇱', col:'#AE1C28' },
   { code:'JPN', name:'Japão',           grp:'F', flag:'🇯🇵', col:'#BC002D' },
   { code:'SWE', name:'Suécia',          grp:'F', flag:'🇸🇪', col:'#006AA7' },
-  { code:'TUN', name:'Tunísia',         grp:'F', flag:'🇹🇳', col:'#E70013' },
-  /* Grupo G */
+  { code:'TUN', name:'Tunísia',         grp:'F', flag:'🇹🇳', col:'#C8010E' },
   { code:'BEL', name:'Bélgica',         grp:'G', flag:'🇧🇪', col:'#2B2B2B' },
   { code:'EGY', name:'Egito',           grp:'G', flag:'🇪🇬', col:'#CE1126' },
   { code:'IRN', name:'Irã',             grp:'G', flag:'🇮🇷', col:'#239F40' },
   { code:'NZL', name:'Nova Zelândia',   grp:'G', flag:'🇳🇿', col:'#00247D' },
-  /* Grupo H */
   { code:'ESP', name:'Espanha',         grp:'H', flag:'🇪🇸', col:'#AA151B' },
   { code:'CPV', name:'Cabo Verde',      grp:'H', flag:'🇨🇻', col:'#003893' },
   { code:'KSA', name:'Arábia Saudita',  grp:'H', flag:'🇸🇦', col:'#006C35' },
-  { code:'URU', name:'Uruguai',         grp:'H', flag:'🇺🇾', col:'#5B9BD5' },
-  /* Grupo I */
+  { code:'URU', name:'Uruguai',         grp:'H', flag:'🇺🇾', col:'#4A8FC0' },
   { code:'FRA', name:'França',          grp:'I', flag:'🇫🇷', col:'#002395' },
   { code:'SEN', name:'Senegal',         grp:'I', flag:'🇸🇳', col:'#00853F' },
   { code:'NOR', name:'Noruega',         grp:'I', flag:'🇳🇴', col:'#EF2B2D' },
   { code:'IRQ', name:'Iraque',          grp:'I', flag:'🇮🇶', col:'#CE1126' },
-  /* Grupo J */
-  { code:'ARG', name:'Argentina',       grp:'J', flag:'🇦🇷', col:'#74ACDF' },
+  { code:'ARG', name:'Argentina',       grp:'J', flag:'🇦🇷', col:'#5A9ED5' },
   { code:'ALG', name:'Argélia',         grp:'J', flag:'🇩🇿', col:'#006233' },
   { code:'AUT', name:'Áustria',         grp:'J', flag:'🇦🇹', col:'#ED2939' },
   { code:'JOR', name:'Jordânia',        grp:'J', flag:'🇯🇴', col:'#007A3D' },
-  /* Grupo K */
   { code:'POR', name:'Portugal',        grp:'K', flag:'🇵🇹', col:'#006600' },
-  { code:'COD', name:'RD Congo',        grp:'K', flag:'🇨🇩', col:'#007FFF' },
+  { code:'COD', name:'RD Congo',        grp:'K', flag:'🇨🇩', col:'#007FCF' },
   { code:'UZB', name:'Uzbequistão',     grp:'K', flag:'🇺🇿', col:'#1EB53A' },
-  { code:'COL', name:'Colômbia',        grp:'K', flag:'🇨🇴', col:'#B08800' },
-  /* Grupo L */
+  { code:'COL', name:'Colômbia',        grp:'K', flag:'🇨🇴', col:'#A07800' },
   { code:'ENG', name:'Inglaterra',      grp:'L', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', col:'#CF081F' },
-  { code:'CRO', name:'Croácia',         grp:'L', flag:'🇭🇷', col:'#CC0000' },
+  { code:'CRO', name:'Croácia',         grp:'L', flag:'🇭🇷', col:'#B01020' },
   { code:'GHA', name:'Gana',            grp:'L', flag:'🇬🇭', col:'#006B3F' },
   { code:'PAN', name:'Panamá',          grp:'L', flag:'🇵🇦', col:'#005293' },
 ];
 
-/* ── Special pages ─────────────────────────────── */
-const SPECIAL_PAGES = [
+/* ── Special pages ───────────────────────── */
+const SPECIALS = [
   {
-    id: 'intro',
-    type: 'special',
-    title: 'Página Inicial',
-    subtitle: 'FIFA World Cup 2026™',
-    icon: '🌟',
-    stickers: [
-      { id:'FWC00', label:'FWC 00', type:'fwc' },
-      { id:'FWC01', label:'FWC 1',  type:'fwc' },
-      { id:'FWC02', label:'FWC 2',  type:'fwc' },
-      { id:'FWC03', label:'FWC 3',  type:'fwc' },
-      { id:'FWC04', label:'FWC 4',  type:'fwc' },
-      { id:'FWC05', label:'FWC 5',  type:'fwc' },
-      { id:'FWC06', label:'FWC 6',  type:'fwc' },
-      { id:'FWC07', label:'FWC 7',  type:'fwc' },
-      { id:'FWC08', label:'FWC 8',  type:'fwc' },
-    ]
+    id:'intro', label:'Página Inicial', icon:'🌟', eyebrow:'ABERTURA',
+    stickers: Array.from({length:9},(_,i)=>({ id:`FWC0${i}`, lbl:`FWC ${i}`, type:'fwc' }))
   },
   {
-    id: 'history',
-    type: 'special',
-    title: 'FIFA World Cup History',
-    subtitle: 'Momentos históricos da Copa',
-    icon: '🏆',
-    stickers: [
-      { id:'FWC09', label:'FWC 9',  type:'fwc' },
-      { id:'FWC10', label:'FWC 10', type:'fwc' },
-      { id:'FWC11', label:'FWC 11', type:'fwc' },
-      { id:'FWC12', label:'FWC 12', type:'fwc' },
-      { id:'FWC13', label:'FWC 13', type:'fwc' },
-      { id:'FWC14', label:'FWC 14', type:'fwc' },
-      { id:'FWC15', label:'FWC 15', type:'fwc' },
-      { id:'FWC16', label:'FWC 16', type:'fwc' },
-      { id:'FWC17', label:'FWC 17', type:'fwc' },
-      { id:'FWC18', label:'FWC 18', type:'fwc' },
-      { id:'FWC19', label:'FWC 19', type:'fwc' },
-    ]
+    id:'history', label:'World Cup History', icon:'🏆', eyebrow:'FIFA WORLD CUP HISTORY',
+    stickers: Array.from({length:11},(_,i)=>({ id:`FWC${i+9}`, lbl:`FWC ${i+9}`, type:'fwc' }))
   },
   {
-    id: 'coca',
-    type: 'special',
-    title: 'Figurinhas Coca-Cola',
-    subtitle: 'Coleção especial Coca-Cola',
-    icon: '🥤',
-    stickers: Array.from({ length: 14 }, (_, i) => ({
-      id: `CC${String(i+1).padStart(2,'0')}`,
-      label: `CC ${i+1}`,
-      type: 'coca'
-    }))
+    id:'coca', label:'Coca-Cola', icon:'🥤', eyebrow:'FIGURINHAS COCA-COLA',
+    stickers: Array.from({length:14},(_,i)=>({ id:`CC${String(i+1).padStart(2,'0')}`, lbl:`CC ${i+1}`, type:'coca' }))
   }
 ];
 
-/* ── Build page list ───────────────────────────── */
-// Order: intro, all teams by group, history, coca
+/* Build page list: intro → teams → history → coca */
 const PAGES = [
-  SPECIAL_PAGES[0],                // intro FWC
-  ...TEAMS.map(t => ({ id: t.code, type: 'team', team: t })),
-  SPECIAL_PAGES[1],                // history FWC
-  SPECIAL_PAGES[2],                // coca-cola
+  SPECIALS[0],
+  ...TEAMS.map(t => ({ id:t.code, type:'team', team:t })),
+  SPECIALS[1],
+  SPECIALS[2],
 ];
 
-const TOTAL_STICKERS =
-  TEAMS.reduce((s) => s + 20, 0) +
-  SPECIAL_PAGES.reduce((s, p) => s + p.stickers.length, 0);
-
-/* ── State ─────────────────────────────────────── */
-let obtained    = new Set();
-let curPage     = PAGES.findIndex(p => p.id === 'BRA');
-let selOpen     = false;
-let confirmRst  = false;
-
-/* ── Persistence ───────────────────────────────── */
-function save() {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify([...obtained])); } catch(e) {}
+function pageStickerIds(page) {
+  if (page.type === 'team') return Array.from({length:20},(_,i)=>`${page.team.code}${String(i+1).padStart(2,'0')}`);
+  return page.stickers.map(s=>s.id);
 }
+
+const TOTAL = PAGES.reduce((s,p)=>s+pageStickerIds(p).length, 0);
+
+/* ── State ───────────────────────────────── */
+let obtained = new Set();
+let curPage  = PAGES.findIndex(p=>p.id==='BRA');
+let selOpen  = false;
+
+/* ── Persist ─────────────────────────────── */
+function save() { try { localStorage.setItem(SK, JSON.stringify([...obtained])); } catch(e){} }
 function load() {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) obtained = new Set(p); }
-  } catch(e) {}
+    const r = localStorage.getItem(SK);
+    if(r){ const p=JSON.parse(r); if(Array.isArray(p)) obtained=new Set(p); }
+  } catch(e){}
 }
 
-/* ── Sticker helpers ───────────────────────────── */
-function teamStickerIds(code) {
-  return Array.from({ length: 20 }, (_, i) => `${code}${String(i+1).padStart(2,'0')}`);
-}
-function pageStickerIds(page) {
-  if (page.type === 'team') return teamStickerIds(page.team.code);
-  return page.stickers.map(s => s.id);
-}
-function pageObtained(page) {
-  return pageStickerIds(page).filter(id => obtained.has(id)).length;
-}
+/* ── Toggle ──────────────────────────────── */
 function toggle(id) {
-  if (obtained.has(id)) obtained.delete(id);
-  else obtained.add(id);
+  if(obtained.has(id)) obtained.delete(id); else obtained.add(id);
   save(); render();
 }
 
-/* ── Slot builder ──────────────────────────────── */
-function makeSlot(id, label, icon, iconType, slotLabel, cssClass, area, col) {
+/* ── Build sticker slot ──────────────────── */
+function mkSlot(id, numLabel, extraClass, iconType, slotLabel, col, area) {
   const got = obtained.has(id);
+
   const div = document.createElement('div');
-  div.className = 'slot' + (cssClass ? ' '+cssClass : '') + (got ? ' got' : '');
-  if (area) div.style.gridArea = area;
-  if (col) div.style.setProperty('--tc', col);
+  div.className = 'slot' + (extraClass?' '+extraClass:'') + (got?' got':'');
+  if(area) div.style.gridArea = area;
+  if(col && got) div.style.setProperty('--tc', col);
+  else if(col) div.style.setProperty('--tc', col);
 
-  const codeEl = document.createElement('div');
-  codeEl.className = 'slot-code';
-  codeEl.textContent = label;
+  /* Number label */
+  const num = document.createElement('div');
+  num.className = 'slot-num';
+  num.textContent = numLabel;
 
+  /* Icon */
   let iconEl;
-  if (iconType === 'flag') {
-    iconEl = document.createElement('div');
-    iconEl.className = 'slot-icon';
-    iconEl.textContent = icon;
-  } else if (iconType === 'flag-sm') {
-    iconEl = document.createElement('div');
-    iconEl.className = 'slot-icon sm';
-    iconEl.textContent = icon;
-  } else if (iconType === 'photo') {
-    iconEl = document.createElement('div');
-    iconEl.className = 'slot-photo';
-    iconEl.textContent = got ? '📸' : '⬛';
-  } else if (iconType === 'fwc') {
-    iconEl = document.createElement('div');
-    iconEl.className = 'slot-icon sm';
-    iconEl.textContent = '⭐';
-  } else if (iconType === 'coca') {
-    iconEl = document.createElement('div');
-    iconEl.className = 'slot-icon sm';
-    iconEl.textContent = '🥤';
+  if(!got) {
+    if(iconType==='badge') {
+      iconEl = document.createElement('div');
+      iconEl.className = 'slot-shield';
+    } else if(iconType==='photo') {
+      iconEl = document.createElement('div');
+      iconEl.className = 'slot-cam';
+      iconEl.textContent = '📷';
+    } else if(iconType==='fwc') {
+      iconEl = document.createElement('div');
+      iconEl.className = 'slot-star';
+      iconEl.textContent = '⭐';
+    } else if(iconType==='coca') {
+      iconEl = document.createElement('div');
+      iconEl.className = 'slot-cola';
+      iconEl.textContent = '🥤';
+    } else {
+      iconEl = document.createElement('div');
+      iconEl.className = 'slot-silhouette';
+      const h = document.createElement('div'); h.className='slot-sil-head';
+      const b = document.createElement('div'); b.className='slot-sil-body';
+      iconEl.append(h,b);
+    }
   } else {
+    // Obtained: show flag (team) or icon
     iconEl = document.createElement('div');
-    iconEl.className = 'slot-player';
+    if(iconType==='badge') {
+      iconEl.style.cssText = 'font-size:24px;line-height:1;position:relative;z-index:3';
+      // get team flag from current page if team page
+      const pg = PAGES[curPage];
+      if(pg.type==='team') iconEl.textContent = pg.team.flag;
+      else iconEl.textContent = '⭐';
+    } else if(iconType==='photo') {
+      iconEl.style.cssText = 'font-size:16px;position:relative;z-index:3';
+      iconEl.textContent = '📸';
+    } else if(iconType==='fwc') {
+      iconEl.style.cssText = 'font-size:20px;position:relative;z-index:3';
+      iconEl.textContent = '⭐';
+    } else if(iconType==='coca') {
+      iconEl.style.cssText = 'font-size:18px;position:relative;z-index:3';
+      iconEl.textContent = '🥤';
+    } else {
+      iconEl.className = 'slot-silhouette';
+      const h = document.createElement('div'); h.className='slot-sil-head';
+      const b = document.createElement('div'); b.className='slot-sil-body';
+      iconEl.append(h,b);
+    }
   }
 
-  const lblEl = document.createElement('div');
-  lblEl.className = 'slot-label';
-  lblEl.textContent = slotLabel;
+  /* Label */
+  const lbl = document.createElement('div');
+  lbl.className = 'slot-label'; // uses .slot-lbl but let's use consistent name
+  lbl.style.cssText = 'font-family:var(--font-cond);font-size:7px;font-weight:600;color:rgba(0,0,0,0.22);text-align:center;letter-spacing:.03em;position:relative;z-index:3';
+  if(got) lbl.style.color = 'rgba(255,255,255,0.65)';
+  lbl.textContent = slotLabel;
 
-  div.append(codeEl, iconEl, lblEl);
+  div.append(num, iconEl, lbl);
 
-  if (got) {
+  if(got) {
     const chk = document.createElement('div');
     chk.className = 'slot-check';
     chk.textContent = '✓';
     div.appendChild(chk);
   }
 
-  div.addEventListener('click', () => toggle(id));
+  div.addEventListener('click', ()=>toggle(id));
   return div;
 }
 
-/* ── Team spread ───────────────────────────────── */
-function buildTeamSpread(team) {
-  const code = team.code;
+/* ── Build team spread ───────────────────── */
+function buildTeam(team) {
   const col  = team.col;
-  const got  = pageObtained(PAGES[curPage]);
-  const done = got === 20;
+  const code = team.code;
+  const ids  = Array.from({length:20},(_,i)=>`${code}${String(i+1).padStart(2,'0')}`);
+  const got  = ids.filter(id=>obtained.has(id)).length;
+  const done = got===20;
+  const pn   = PAGES.findIndex(p=>p.id===code); // 1-based page number relative
 
-  // Left page
-  const left = document.createElement('div');
-  left.className = 'page page-left';
+  /* LEFT PAGE */
+  const L = document.createElement('div');
+  L.className = 'page page-l';
 
+  // Header
   const hdr = document.createElement('div');
-  hdr.className = 'page-hdr';
+  hdr.className = 'phdr-team';
   hdr.style.background = col;
   hdr.innerHTML = `
-    <div class="page-hdr-we">WE ARE</div>
-    <div class="page-hdr-name">${team.name.toUpperCase()}</div>
-    <div class="page-hdr-sub">
-      <span>FIFA World Cup 2026™</span>
-      <span class="page-hdr-grp">GRP ${team.grp}</span>
-      <span class="page-hdr-prog" style="color:${done?'#a5d6a7':'rgba(255,255,255,0.6)'}">${got}/20</span>
+    <div class="phdr-team-flag">${team.flag}</div>
+    <div class="phdr-team-text">
+      <div class="phdr-team-we">WE ARE</div>
+      <div class="phdr-team-name">${team.name.toUpperCase()}</div>
+    </div>
+    <div class="phdr-team-badge">
+      <span class="phdr-team-grp">GRP ${team.grp}</span>
+      <span class="phdr-team-prog" style="color:${done?'#b2ffb8':'rgba(255,255,255,0.85)'}">${got}/20</span>
     </div>`;
 
+  // Left grid: S1–S10
   const gl = document.createElement('div');
-  gl.className = 'sticker-grid grid-team-left';
-  gl.style.setProperty('--tc', col);
+  gl.className = 'sgrid sgrid-tl';
 
-  const leftSlots = [
-    [1,'s1','Brasão','flag'],
-    [2,'s2',`Jog. 2`,'player'],
-    [3,'s3',`Jog. 3`,'player'],
-    [4,'s4',`Jog. 4`,'player'],
-    [5,'s5',`Jog. 5`,'player'],
-    [6,'s6',`Jog. 6`,'player'],
-    [7,'s7',`Jog. 7`,'player'],
-    [8,'s8',`Jog. 8`,'player'],
-    [9,'s9',`Jog. 9`,'player'],
-    [10,'s10',`Jog. 10`,'player'],
+  const leftDef = [
+    [1,'s1','badge','Brasão'],
+    [2,'s2','player',`Jog. 2`],
+    [3,'s3','player',`Jog. 3`],
+    [4,'s4','player',`Jog. 4`],
+    [5,'s5','player',`Jog. 5`],
+    [6,'s6','player',`Jog. 6`],
+    [7,'s7','player',`Jog. 7`],
+    [8,'s8','player',`Jog. 8`],
+    [9,'s9','player',`Jog. 9`],
+    [10,'s10','player',`Jog. 10`],
   ];
-  leftSlots.forEach(([n, area, lbl, itype]) => {
+
+  leftDef.forEach(([n,area,itype,slbl])=>{
     const id = `${code}${String(n).padStart(2,'0')}`;
-    const iconType = itype === 'flag' ? 'flag' : 'player';
-    gl.appendChild(makeSlot(id, `${code} ${n}`, team.flag, iconType, lbl, '', area, col));
+    const slot = mkSlot(id, `${code} ${n}`, '', itype, slbl, col, area);
+    gl.appendChild(slot);
   });
 
-  left.append(hdr, gl);
+  // Page number
+  const pnL = document.createElement('div');
+  pnL.className = 'page-num page-num-l';
+  pnL.textContent = `${pn*2-1}`;
 
-  // Right page
-  const right = document.createElement('div');
-  right.className = 'page page-right';
+  L.append(hdr, gl, pnL);
+
+  /* RIGHT PAGE */
+  const R = document.createElement('div');
+  R.className = 'page page-r';
 
   const spacer = document.createElement('div');
-  spacer.className = 'page-spacer';
+  spacer.className = 'phdr-spacer';
 
   const gr = document.createElement('div');
-  gr.className = 'sticker-grid grid-team-right';
-  gr.style.setProperty('--tc', col);
+  gr.className = 'sgrid sgrid-tr';
 
-  const rightSlots = [
-    [11,'s11',`Jog. 11`,'player'],
-    [12,'s12',`Jog. 12`,'player'],
-    [13,'s13','Foto Equipe','photo'],
-    [14,'s14',`Jog. 14`,'player'],
-    [15,'s15',`Jog. 15`,'player'],
-    [16,'s16',`Jog. 16`,'player'],
-    [17,'s17',`Jog. 17`,'player'],
-    [18,'s18',`Jog. 18`,'player'],
-    [19,'s19',`Jog. 19`,'player'],
-    [20,'s20',`Jog. 20`,'player'],
+  const rightDef = [
+    [11,'s11','player',`Jog. 11`],
+    [12,'s12','player',`Jog. 12`],
+    [13,'s13','photo','Foto Equipe'],
+    [14,'s14','player',`Jog. 14`],
+    [15,'s15','player',`Jog. 15`],
+    [16,'s16','player',`Jog. 16`],
+    [17,'s17','player',`Jog. 17`],
+    [18,'s18','player',`Jog. 18`],
+    [19,'s19','player',`Jog. 19`],
+    [20,'s20','player',`Jog. 20`],
   ];
-  rightSlots.forEach(([n, area, lbl, itype]) => {
+
+  rightDef.forEach(([n,area,itype,slbl])=>{
     const id = `${code}${String(n).padStart(2,'0')}`;
-    gr.appendChild(makeSlot(id, `${code} ${n}`, team.flag, itype, lbl, '', area, col));
+    const slot = mkSlot(id, `${code} ${n}`, '', itype, slbl, col, area);
+    gr.appendChild(slot);
   });
 
   // Group card
-  const grpTeams = TEAMS.filter(t => t.grp === team.grp);
+  const grpTeams = TEAMS.filter(t=>t.grp===team.grp);
   const gc = document.createElement('div');
   gc.className = 'grp-card';
   gc.style.gridArea = 'grp';
-  const gt = document.createElement('div');
-  gt.className = 'grp-card-title';
-  gt.textContent = `GRUPO ${team.grp}`;
-  const gf = document.createElement('div');
-  gf.className = 'grp-flags';
-  grpTeams.forEach(t => {
-    const fi = document.createElement('div');
-    fi.className = 'grp-flag-item' + (t.code === code ? ' me' : '');
-    fi.textContent = t.flag;
-    fi.title = t.name;
-    gf.appendChild(fi);
+
+  const gcLbl = document.createElement('div');
+  gcLbl.className = 'grp-card-label';
+  gcLbl.textContent = `GRUPO ${team.grp}`;
+
+  const gcFlags = document.createElement('div');
+  gcFlags.className = 'grp-flags';
+  grpTeams.forEach(t=>{
+    const f = document.createElement('div');
+    f.className = 'grp-flag' + (t.code===code?' active':'');
+    f.textContent = t.flag;
+    f.title = t.name;
+    gcFlags.appendChild(f);
   });
-  gc.append(gt, gf);
+
+  gc.append(gcLbl, gcFlags);
   gr.appendChild(gc);
 
-  right.append(spacer, gr);
+  const pnR = document.createElement('div');
+  pnR.className = 'page-num page-num-r';
+  pnR.textContent = `${pn*2}`;
 
-  return [left, right];
+  R.append(spacer, gr, pnR);
+
+  return [L, R];
 }
 
-/* ── Special spread ───────────────────────────── */
-function buildSpecialSpread(page) {
-  const got  = pageObtained(page);
-  const total = page.stickers.length;
-  const half  = Math.ceil(total / 2);
-  const leftStickers  = page.stickers.slice(0, half);
-  const rightStickers = page.stickers.slice(half);
+/* ── Build special spread ─────────────────── */
+function buildSpecial(sp) {
+  const ids   = sp.stickers.map(s=>s.id);
+  const got   = ids.filter(id=>obtained.has(id)).length;
+  const half  = Math.ceil(sp.stickers.length / 2);
+  const leftS  = sp.stickers.slice(0, half);
+  const rightS = sp.stickers.slice(half);
 
-  function buildHalf(stickers, isLeft) {
-    const p = document.createElement('div');
-    p.className = 'page ' + (isLeft ? 'page-left' : 'page-right');
+  function makeSide(stickers, isLeft) {
+    const P = document.createElement('div');
+    P.className = 'page ' + (isLeft?'page-l':'page-r');
 
-    if (isLeft) {
+    if(isLeft) {
       const hdr = document.createElement('div');
-      hdr.className = 'page-hdr-special';
+      hdr.className = 'phdr-special';
       hdr.innerHTML = `
-        <div class="page-hdr-special-label">FIFA WORLD CUP 2026™</div>
-        <div class="page-hdr-special-title">${page.icon} ${page.title.toUpperCase()}</div>
-        <div class="page-hdr-special-sub">
-          <span>${page.subtitle}</span>
-          <span class="page-hdr-special-prog">${got}/${total}</span>
+        <div class="phdr-special-eyebrow">${sp.eyebrow}</div>
+        <div class="phdr-special-title">${sp.icon} ${sp.label.toUpperCase()}</div>
+        <div class="phdr-special-sub">
+          <span>FIFA World Cup 2026™</span>
+          <span>${got}/${sp.stickers.length}</span>
         </div>`;
-      p.appendChild(hdr);
+      P.appendChild(hdr);
     } else {
-      const sp = document.createElement('div');
-      sp.className = 'page-spacer';
-      p.appendChild(sp);
+      const sp2 = document.createElement('div');
+      sp2.className = 'phdr-spacer';
+      P.appendChild(sp2);
     }
 
     const grid = document.createElement('div');
-    grid.className = 'sticker-grid grid-special';
+    grid.className = 'sgrid sgrid-sp';
 
-    stickers.forEach(s => {
-      grid.appendChild(makeSlot(s.id, s.label, '', s.type, s.type === 'fwc' ? 'Cromo Especial' : 'Coca-Cola', s.type, null, null));
+    stickers.forEach(s=>{
+      grid.appendChild(mkSlot(s.id, s.lbl, s.type, s.type, s.type==='fwc'?'Especial':'Coca-Cola', null, null));
     });
 
-    p.appendChild(grid);
-    return p;
+    P.appendChild(grid);
+    return P;
   }
 
-  return [buildHalf(leftStickers, true), buildHalf(rightStickers, false)];
+  return [makeSide(leftS,true), makeSide(rightS,false)];
 }
 
-/* ── Selector ──────────────────────────────────── */
+/* ── Selector ────────────────────────────── */
 function buildSelector() {
-  const sel = document.getElementById('selector');
-  sel.innerHTML = '';
+  const inner = document.getElementById('selInner');
+  inner.innerHTML = '';
 
-  // Special pages section
-  const secSpecial = document.createElement('div');
-  secSpecial.className = 'sel-section';
-  const secTitle = document.createElement('div');
-  secTitle.className = 'sel-section-title';
-  secTitle.textContent = 'PÁGINAS ESPECIAIS';
-  secSpecial.appendChild(secTitle);
-  const specRow = document.createElement('div');
-  specRow.className = 'sel-special-row';
+  // Special pages
+  const sh = document.createElement('div');
+  sh.className = 'sel-section-hd';
+  sh.textContent = 'PÁGINAS ESPECIAIS';
+  inner.appendChild(sh);
 
-  PAGES.forEach((p, i) => {
-    if (p.type !== 'special') return;
-    const got = pageObtained(p);
-    const total = p.stickers.length;
+  const sr = document.createElement('div');
+  sr.className = 'sel-specials';
+  PAGES.forEach((p,i)=>{
+    if(p.type==='team') return;
+    const got = pageStickerIds(p).filter(id=>obtained.has(id)).length;
+    const tot = pageStickerIds(p).length;
     const btn = document.createElement('button');
-    btn.className = 'sel-special-btn' + (i === curPage ? ' active' : '');
-    const pEl = document.createElement('span');
-    pEl.className = 'sel-special-btn-prog';
-    pEl.textContent = `${got}/${total}`;
-    btn.innerHTML = `${p.icon} ${p.title} `;
-    btn.appendChild(pEl);
-    btn.addEventListener('click', () => { curPage = i; selOpen = false; render(); });
-    specRow.appendChild(btn);
+    btn.className = 'sel-sp-btn' + (i===curPage?' active':'');
+    const pr = document.createElement('span');
+    pr.className = 'sel-sp-prog';
+    pr.textContent = `${got}/${tot}`;
+    btn.innerHTML = `${p.icon} ${p.label} `;
+    btn.appendChild(pr);
+    btn.addEventListener('click',()=>{ curPage=i; selOpen=false; render(); });
+    sr.appendChild(btn);
   });
+  inner.appendChild(sr);
 
-  secSpecial.appendChild(specRow);
-  sel.appendChild(secSpecial);
+  // Teams by group
+  const th = document.createElement('div');
+  th.className = 'sel-section-hd';
+  th.textContent = 'SELEÇÕES';
+  inner.appendChild(th);
 
-  // Team pages by group
-  const secTeams = document.createElement('div');
-  secTeams.className = 'sel-section';
-  const secTeamsTitle = document.createElement('div');
-  secTeamsTitle.className = 'sel-section-title';
-  secTeamsTitle.textContent = 'SELEÇÕES';
-  secTeams.appendChild(secTeamsTitle);
-
-  'ABCDEFGHIJKL'.split('').forEach(g => {
-    const grpTeams = TEAMS.filter(t => t.grp === g);
-
+  'ABCDEFGHIJKL'.split('').forEach(g=>{
     const row = document.createElement('div');
     row.className = 'sel-grp-row';
     const lbl = document.createElement('div');
-    lbl.className = 'sel-grp-label';
-    lbl.textContent = `GRP ${g}`;
+    lbl.className = 'sel-grp-lbl';
+    lbl.textContent = 'GRP '+g;
     row.appendChild(lbl);
 
     const wrap = document.createElement('div');
     wrap.className = 'sel-teams';
 
-    grpTeams.forEach(t => {
-      const pi  = PAGES.findIndex(p => p.id === t.code);
-      const got = pageObtained(PAGES[pi]);
-      const done = got === 20;
+    TEAMS.filter(t=>t.grp===g).forEach(t=>{
+      const pi  = PAGES.findIndex(p=>p.id===t.code);
+      const got = pageStickerIds(PAGES[pi]).filter(id=>obtained.has(id)).length;
+      const done = got===20;
 
       const btn = document.createElement('button');
-      btn.className = 'sel-btn' + (pi === curPage ? ' active' : '');
-
-      const flagEl = document.createElement('span');
-      flagEl.className = 'sel-btn-flag';
-      flagEl.textContent = t.flag;
-
-      const progEl = document.createElement('span');
-      progEl.className = 'sel-btn-prog' + (done ? ' done' : '');
-      progEl.textContent = `${got}/20`;
-
-      btn.append(flagEl, progEl);
+      btn.className = 'sel-t' + (pi===curPage?' active':'');
       btn.title = t.name;
-      btn.addEventListener('click', () => { curPage = pi; selOpen = false; render(); });
+
+      const f = document.createElement('div'); f.className='sel-t-flag'; f.textContent=t.flag;
+      const p2 = document.createElement('div');
+      p2.className = 'sel-t-prog' + (done?' done':'');
+      p2.textContent = `${got}/20`;
+
+      btn.append(f,p2);
+      btn.addEventListener('click',()=>{ curPage=pi; selOpen=false; render(); });
       wrap.appendChild(btn);
     });
 
-    row.append(lbl, wrap);
-    secTeams.appendChild(row);
+    row.appendChild(wrap);
+    inner.appendChild(row);
   });
-
-  sel.appendChild(secTeams);
 }
 
-/* ── Main render ───────────────────────────────── */
+/* ── Main render ──────────────────────────── */
 function render() {
-  const page  = PAGES[curPage];
-  const isTeam = page.type === 'team';
-  const got   = pageObtained(page);
-  const total = pageStickerIds(page).length;
-  const done  = got === total;
-  const pct   = Math.round(obtained.size / TOTAL_STICKERS * 100);
+  const page = PAGES[curPage];
+  const isTeam = page.type==='team';
+  const sids = pageStickerIds(page);
+  const got  = sids.filter(id=>obtained.has(id)).length;
+  const tot  = sids.length;
+  const pct  = Math.round(obtained.size/TOTAL*100);
 
-  // Body background
-  document.body.classList.toggle('team-active', isTeam);
-  document.body.classList.toggle('special-active', !isTeam);
-  if (isTeam) {
-    document.body.style.setProperty('--tc', page.team.col);
-  }
+  /* HUD */
+  document.getElementById('hudGot').textContent   = obtained.size;
+  document.getElementById('hudTotal').textContent = TOTAL;
+  document.getElementById('hudPct').textContent   = pct+'%';
+  document.getElementById('hudFill').style.width  = pct+'%';
 
-  // Global progress
-  document.getElementById('globalLabel').textContent = `${obtained.size} de ${TOTAL_STICKERS}`;
-  document.getElementById('globalPct').textContent   = `${pct}%`;
-  document.getElementById('progFill').style.width    = `${pct}%`;
+  /* Nav */
+  document.getElementById('btnPrev').disabled = curPage===0;
+  document.getElementById('btnNext').disabled = curPage===PAGES.length-1;
 
-  // Picker
-  if (isTeam) {
-    document.getElementById('pickerFlag').textContent = page.team.flag;
-    document.getElementById('pickerName').textContent = page.team.name;
-    document.getElementById('pickerSub').textContent  = `Grupo ${page.team.grp}`;
+  /* Picker button */
+  if(isTeam) {
+    document.getElementById('cpFlag').textContent = page.team.flag;
+    document.getElementById('cpName').textContent = page.team.name;
+    document.getElementById('cpMeta').textContent = `Grupo ${page.team.grp} · ${got}/${tot}`;
   } else {
-    document.getElementById('pickerFlag').textContent = page.icon;
-    document.getElementById('pickerName').textContent = page.title;
-    document.getElementById('pickerSub').textContent  = page.subtitle;
+    document.getElementById('cpFlag').textContent = page.icon;
+    document.getElementById('cpName').textContent = page.label;
+    document.getElementById('cpMeta').textContent = `${got}/${tot} figurinhas`;
   }
-
-  const doneEl = document.getElementById('btnDone');
-  if (doneEl) {
-    // Dynamically show done badge in picker-info
-    let existingDone = document.querySelector('.picker-done-badge');
-    if (done && !existingDone) {
-      const badge = document.createElement('span');
-      badge.className = 'picker-done picker-done-badge';
-      badge.textContent = '✓ Completo';
-      document.getElementById('pickerSub').insertAdjacentElement('afterend', badge);
-    } else if (!done && existingDone) {
-      existingDone.remove();
-    }
-  }
-
-  document.getElementById('pickerProg').textContent = `${got}/${total}`;
-  document.getElementById('pickerChevron').textContent = selOpen ? '▲' : '▼';
+  document.getElementById('cpChevron').textContent = selOpen?'▲':'▼';
   document.getElementById('btnPicker').classList.toggle('open', selOpen);
+  document.getElementById('selectorPanel').classList.toggle('open', selOpen);
+  if(selOpen) buildSelector();
 
-  document.getElementById('btnPrev').disabled = curPage === 0;
-  document.getElementById('btnNext').disabled = curPage === PAGES.length - 1;
+  /* Spread */
+  const album = document.getElementById('album');
+  // Keep spine, rebuild left/right
+  const oldL = document.getElementById('pageL');
+  const oldR = document.getElementById('pageR');
 
-  // Spread
-  const spread = document.getElementById('spread');
-  spread.innerHTML = '';
-
-  let leftPage, rightPage;
-  if (isTeam) {
-    [leftPage, rightPage] = buildTeamSpread(page.team);
+  let newL, newR;
+  if(isTeam) {
+    [newL, newR] = buildTeam(page.team);
   } else {
-    [leftPage, rightPage] = buildSpecialSpread(page);
+    [newL, newR] = buildSpecial(page);
   }
 
-  const spine = document.createElement('div');
-  spine.className = 'spine';
-  const spineLine = document.createElement('div');
-  spineLine.className = 'spine-line';
-  spine.appendChild(spineLine);
+  newL.id = 'pageL';
+  newR.id = 'pageR';
 
-  spread.append(leftPage, spine, rightPage);
-
-  // Selector
-  const selEl = document.getElementById('selector');
-  selEl.classList.toggle('open', selOpen);
-  if (selOpen) buildSelector();
-
-  // Actions
-  const acts = document.getElementById('actions');
-  acts.innerHTML = '';
-
-  const markBtn = document.createElement('button');
-  markBtn.className = 'act-btn act-mark';
-  markBtn.textContent = '✓ Marcar página toda';
-  markBtn.addEventListener('click', () => {
-    pageStickerIds(page).forEach(id => obtained.add(id));
-    save(); render();
-  });
-
-  const unmarkBtn = document.createElement('button');
-  unmarkBtn.className = 'act-btn act-unmark';
-  unmarkBtn.textContent = '✕ Desmarcar toda';
-  unmarkBtn.addEventListener('click', () => {
-    pageStickerIds(page).forEach(id => obtained.delete(id));
-    save(); render();
-  });
-
-  acts.append(markBtn, unmarkBtn);
-
-  if (confirmRst) {
-    const row = document.createElement('div');
-    row.className = 'confirm-row';
-
-    const ok = document.createElement('button');
-    ok.className = 'act-btn act-confirm';
-    ok.textContent = 'Confirmar reset';
-    ok.addEventListener('click', () => { obtained.clear(); save(); confirmRst = false; render(); });
-
-    const cancel = document.createElement('button');
-    cancel.className = 'act-btn act-cancel';
-    cancel.textContent = '✕';
-    cancel.addEventListener('click', () => { confirmRst = false; render(); });
-
-    row.append(ok, cancel);
-    acts.appendChild(row);
-  } else {
-    const rstBtn = document.createElement('button');
-    rstBtn.className = 'act-btn act-reset';
-    rstBtn.textContent = '↺ Reiniciar álbum';
-    rstBtn.addEventListener('click', () => { confirmRst = true; render(); });
-    acts.appendChild(rstBtn);
-  }
+  oldL.replaceWith(newL);
+  oldR.replaceWith(newR);
 }
 
-/* ── Events ────────────────────────────────────── */
-document.getElementById('btnPrev').addEventListener('click', () => {
-  if (curPage > 0) { curPage--; selOpen = false; render(); }
+/* ── Events ─────────────────────────────── */
+document.getElementById('btnPrev').addEventListener('click', ()=>{
+  if(curPage>0){ curPage--; selOpen=false; render(); }
 });
-document.getElementById('btnNext').addEventListener('click', () => {
-  if (curPage < PAGES.length - 1) { curPage++; selOpen = false; render(); }
+document.getElementById('btnNext').addEventListener('click', ()=>{
+  if(curPage<PAGES.length-1){ curPage++; selOpen=false; render(); }
 });
-document.getElementById('btnPicker').addEventListener('click', () => {
-  selOpen = !selOpen; render();
-});
-
-document.addEventListener('click', e => {
-  const picker = document.getElementById('btnPicker');
-  const sel    = document.getElementById('selector');
-  if (selOpen && !picker.contains(e.target) && !sel.contains(e.target)) {
-    selOpen = false; render();
-  }
+document.getElementById('btnPicker').addEventListener('click', ()=>{
+  selOpen=!selOpen; render();
 });
 
-document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowLeft'  && curPage > 0) { curPage--; selOpen = false; render(); }
-  if (e.key === 'ArrowRight' && curPage < PAGES.length - 1) { curPage++; selOpen = false; render(); }
-  if (e.key === 'Escape' && selOpen) { selOpen = false; render(); }
+document.getElementById('btnMark').addEventListener('click', ()=>{
+  pageStickerIds(PAGES[curPage]).forEach(id=>obtained.add(id));
+  save(); render();
+});
+document.getElementById('btnUnmark').addEventListener('click', ()=>{
+  pageStickerIds(PAGES[curPage]).forEach(id=>obtained.delete(id));
+  save(); render();
 });
 
-/* ── Init ──────────────────────────────────────── */
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  document.getElementById('confirmOverlay').style.display='flex';
+});
+document.getElementById('confirmYes').addEventListener('click', ()=>{
+  obtained.clear(); save();
+  document.getElementById('confirmOverlay').style.display='none';
+  render();
+});
+document.getElementById('confirmNo').addEventListener('click', ()=>{
+  document.getElementById('confirmOverlay').style.display='none';
+});
+
+document.addEventListener('click', e=>{
+  const wrap = document.getElementById('pickerWrap');
+  if(selOpen && !wrap.contains(e.target)){ selOpen=false; render(); }
+});
+
+document.addEventListener('keydown', e=>{
+  if(e.key==='ArrowLeft'  && curPage>0){ curPage--; selOpen=false; render(); }
+  if(e.key==='ArrowRight' && curPage<PAGES.length-1){ curPage++; selOpen=false; render(); }
+  if(e.key==='Escape' && selOpen){ selOpen=false; render(); }
+});
+
+/* ── Init ───────────────────────────────── */
 load();
 render();

@@ -6,50 +6,106 @@
   <title>Álbum Copa do Mundo 2026</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <div class="app" id="app">
 
-    <header class="topbar">
-      <div class="topbar-brand">
-        <span class="trophy">⚽</span>
-        <div>
-          <h1>Álbum Copa do Mundo 2026</h1>
-          <p>FIFA World Cup 2026™ · USA · Canada · México</p>
-        </div>
+<!-- Desk surface -->
+<div class="desk">
+
+  <!-- HUD: floating above desk -->
+  <div class="hud" id="hud">
+    <div class="hud-left">
+      <span class="hud-ball">⚽</span>
+      <div>
+        <div class="hud-title">ÁLBUM COPA DO MUNDO 2026</div>
+        <div class="hud-sub">FIFA World Cup 2026™ · USA · Mexico · Canada</div>
       </div>
-      <div class="global-prog">
-        <div class="prog-row">
-          <span id="globalLabel">0 de 0</span>
-          <strong id="globalPct">0%</strong>
-        </div>
-        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
+    </div>
+    <div class="hud-right">
+      <div class="hud-nums"><span id="hudGot">0</span><span class="hud-sep">/</span><span id="hudTotal">980</span></div>
+      <div class="hud-bar-wrap">
+        <div class="hud-bar"><div class="hud-bar-fill" id="hudFill"></div></div>
+        <span class="hud-pct" id="hudPct">0%</span>
       </div>
-    </header>
+    </div>
+  </div>
 
-    <nav class="nav-row">
-      <button class="nav-arr" id="btnPrev">‹</button>
-      <button class="picker-btn" id="btnPicker">
-        <span class="picker-flag" id="pickerFlag">⚽</span>
-        <div class="picker-info">
-          <span class="picker-name" id="pickerName">Carregando…</span>
-          <span class="picker-sub" id="pickerSub"></span>
-        </div>
-        <span class="picker-prog" id="pickerProg"></span>
-        <span class="picker-chevron" id="pickerChevron">▼</span>
-      </button>
-      <button class="nav-arr" id="btnNext">›</button>
-    </nav>
+  <!-- Album wrapper (has page-nav arrows on sides) -->
+  <div class="album-wrap">
 
-    <div class="selector" id="selector"></div>
+    <!-- Left arrow -->
+    <button class="page-nav page-nav-left" id="btnPrev" title="País anterior">
+      <span>‹</span>
+    </button>
 
-    <main class="spread" id="spread"></main>
+    <!-- THE ALBUM -->
+    <div class="album" id="album">
 
-    <footer class="actions" id="actions"></footer>
+      <!-- Spine -->
+      <div class="spine">
+        <div class="spine-title">FIFA WORLD CUP 2026</div>
+      </div>
+
+      <!-- Left page -->
+      <div class="page page-l" id="pageL"></div>
+
+      <!-- Right page -->
+      <div class="page page-r" id="pageR"></div>
+
+    </div>
+
+    <!-- Right arrow -->
+    <button class="page-nav page-nav-right" id="btnNext" title="Próximo país">
+      <span>›</span>
+    </button>
 
   </div>
-  <script src="script.js"></script>
+
+  <!-- Bottom controls -->
+  <div class="controls" id="controls">
+
+    <button class="ctrl-btn ctrl-mark" id="btnMark">✓ Marcar página</button>
+
+    <!-- Team picker -->
+    <div class="picker-wrap" id="pickerWrap">
+      <button class="ctrl-picker" id="btnPicker">
+        <span class="cp-flag" id="cpFlag">🇧🇷</span>
+        <div class="cp-info">
+          <span class="cp-name" id="cpName">Brasil</span>
+          <span class="cp-meta" id="cpMeta">Grupo C · 0/20</span>
+        </div>
+        <span class="cp-chevron" id="cpChevron">▲</span>
+      </button>
+
+      <!-- Selector panel (slides up from button) -->
+      <div class="selector-panel" id="selectorPanel">
+        <div class="sel-inner" id="selInner"></div>
+      </div>
+    </div>
+
+    <button class="ctrl-btn ctrl-unmark" id="btnUnmark">✕ Desmarcar página</button>
+
+  </div>
+
+</div>
+
+<!-- Reset button (corner) -->
+<button class="reset-btn" id="resetBtn" title="Reiniciar álbum">↺</button>
+
+<!-- Confirm overlay -->
+<div class="confirm-overlay" id="confirmOverlay" style="display:none">
+  <div class="confirm-box">
+    <div class="confirm-title">⚠️ Reiniciar álbum?</div>
+    <div class="confirm-sub">Todas as figurinhas marcadas serão apagadas.</div>
+    <div class="confirm-btns">
+      <button class="confirm-yes" id="confirmYes">Sim, apagar tudo</button>
+      <button class="confirm-no"  id="confirmNo">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
