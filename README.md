@@ -1,1 +1,29 @@
 # AlbumCopa2026
+
+Álbum digital da Copa do Mundo 2026 para você controlar sua coleção de figurinhas.
+
+## O que este projeto faz
+
+- Exibe o álbum em formato **página por página**.
+- Permite **marcar e desmarcar** figurinhas com um clique.
+- Mostra o **progresso da página atual** e o **progresso geral** do álbum.
+- Salva automaticamente as marcações no navegador (localStorage).
+
+## Como usar
+
+1. Abra o arquivo `index.html` no navegador.
+2. Navegue pelas páginas usando:
+   - botão **Página anterior**
+   - botão **Próxima página**
+   - seletor de páginas
+3. Clique em uma figurinha para marcar como obtida.
+4. Use os botões de ação para:
+   - marcar toda a página
+   - desmarcar toda a página
+   - reiniciar o álbum completo
+
+## Estrutura do projeto
+
+- `index.html`: estrutura da interface.
+- `styles.css`: estilo visual do álbum.
+- `script.js`: regras de páginas, figurinhas, navegação e persistência.
