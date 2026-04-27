@@ -4,10 +4,14 @@
 
 ## O que este projeto faz
 
+- Inclui uma **Central do vendedor** para gestão de preços.
+- Permite definir **preço base por categoria** (BR, Cromos FWC, Coca-Cola, Outros Times).
+- Permite definir **preço padrão por seleção**.
+- Permite definir **preço individual por figurinha** dentro da seleção.
 - Exibe o álbum em formato **página por página**.
 - Permite **marcar e desmarcar** figurinhas com um clique.
 - Mostra o **progresso da página atual** e o **progresso geral** do álbum.
-- Salva automaticamente as marcações no navegador (localStorage).
+- Salva automaticamente marcações e preços no navegador (localStorage).
 
 ## Como usar
 
@@ -17,7 +21,11 @@
    - botão **Próxima página**
    - seletor de páginas
 3. Clique em uma figurinha para marcar como obtida.
-4. Use os botões de ação para:
+4. Na **Central do vendedor**:
+   - ajuste os preços base por categoria
+   - escolha uma seleção e salve um preço padrão
+   - clique em **Preço individual** para abrir a lista de figurinhas da seleção e ajustar valores unitários
+5. Use os botões de ação para:
    - marcar toda a página
    - desmarcar toda a página
    - reiniciar o álbum completo

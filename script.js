@@ -1,4 +1,5 @@
-const STORAGE_KEY = "album-copa-2026-figurinha-state";
+const STICKER_STORAGE_KEY = "album-copa-2026-figurinha-state";
+const PRICING_STORAGE_KEY = "album-copa-2026-pricing-state";
 
 const pages = [
   {
@@ -93,9 +94,32 @@ const pages = [
   },
 ];
 
+const selectionPages = pages.filter((page) => page.id.startsWith("grupo-"));
+const allStickerIds = new Set(
+  pages.flatMap((page) => page.stickers.map((sticker) => sticker.id))
+);
+const currencyFormatter = new Intl.NumberFormat("pt-BR", {
+  style: "currency",
+  currency: "BRL",
+});
+
+const defaultPricingState = {
+  categoryBase: {
+    br: 10,
+    fwc: 8,
+    coca: 10,
+    outros: 1.5,
+  },
+  selectionDefault: {},
+  stickerIndividual: {},
+  selectedSelectionId: selectionPages[0] ? selectionPages[0].id : pages[0].id,
+  individualPanelOpen: false,
+};
+
 const state = {
   currentPageIndex: 0,
   obtained: new Set(loadSavedStickers()),
+  pricing: loadPricingState(),
 };
 
 const elements = {
@@ -113,13 +137,33 @@ const elements = {
   markAllPageButton: document.getElementById("markAllPageButton"),
   unmarkAllPageButton: document.getElementById("unmarkAllPageButton"),
   resetAlbumButton: document.getElementById("resetAlbumButton"),
+  priceBrInput: document.getElementById("priceBrInput"),
+  priceFwcInput: document.getElementById("priceFwcInput"),
+  priceCocaInput: document.getElementById("priceCocaInput"),
+  priceOthersInput: document.getElementById("priceOthersInput"),
+  openIndividualPricingButton: document.getElementById(
+    "openIndividualPricingButton"
+  ),
+  sellerSelectionSelect: document.getElementById("sellerSelectionSelect"),
+  selectionDefaultPriceInput: document.getElementById(
+    "selectionDefaultPriceInput"
+  ),
+  saveSelectionDefaultButton: document.getElementById("saveSelectionDefaultButton"),
+  individualPricingPanel: document.getElementById("individualPricingPanel"),
+  individualPricingTitle: document.getElementById("individualPricingTitle"),
+  individualPricingDescription: document.getElementById(
+    "individualPricingDescription"
+  ),
+  individualStickerList: document.getElementById("individualStickerList"),
 };
 
 initialize();
 
 function initialize() {
   fillPageSelect();
+  fillSellerSelectionSelect();
   bindEvents();
+  renderSellerCenter();
   renderPage();
   renderGlobalProgress();
 }
@@ -135,6 +179,28 @@ function fillPageSelect() {
   elements.pageSelect.innerHTML = "";
   options.forEach((option) => elements.pageSelect.appendChild(option));
   elements.pageSelect.value = String(state.currentPageIndex);
+}
+
+function fillSellerSelectionSelect() {
+  elements.sellerSelectionSelect.innerHTML = "";
+
+  selectionPages.forEach((page) => {
+    const option = document.createElement("option");
+    option.value = page.id;
+    option.textContent = page.title;
+    elements.sellerSelectionSelect.appendChild(option);
+  });
+
+  const validSelection = selectionPages.some(
+    (page) => page.id === state.pricing.selectedSelectionId
+  );
+
+  if (!validSelection) {
+    state.pricing.selectedSelectionId =
+      selectionPages[0] ? selectionPages[0].id : pages[0].id;
+  }
+
+  elements.sellerSelectionSelect.value = state.pricing.selectedSelectionId;
 }
 
 function bindEvents() {
@@ -171,7 +237,7 @@ function bindEvents() {
   elements.markAllPageButton.addEventListener("click", () => {
     const page = pages[state.currentPageIndex];
     page.stickers.forEach((sticker) => state.obtained.add(sticker.id));
-    persistState();
+    persistStickerState();
     renderPage();
     renderGlobalProgress();
   });
@@ -179,7 +245,7 @@ function bindEvents() {
   elements.unmarkAllPageButton.addEventListener("click", () => {
     const page = pages[state.currentPageIndex];
     page.stickers.forEach((sticker) => state.obtained.delete(sticker.id));
-    persistState();
+    persistStickerState();
     renderPage();
     renderGlobalProgress();
   });
@@ -193,10 +259,194 @@ function bindEvents() {
     }
 
     state.obtained.clear();
-    persistState();
+    persistStickerState();
     renderPage();
     renderGlobalProgress();
   });
+
+  bindCategoryInput(elements.priceBrInput, "br");
+  bindCategoryInput(elements.priceFwcInput, "fwc");
+  bindCategoryInput(elements.priceCocaInput, "coca");
+  bindCategoryInput(elements.priceOthersInput, "outros");
+
+  elements.openIndividualPricingButton.addEventListener("click", () => {
+    state.pricing.individualPanelOpen = !state.pricing.individualPanelOpen;
+    persistPricingState();
+    renderIndividualPanelVisibility();
+    if (state.pricing.individualPanelOpen) {
+      renderIndividualPricingList();
+    }
+  });
+
+  elements.sellerSelectionSelect.addEventListener("change", (event) => {
+    state.pricing.selectedSelectionId = event.target.value;
+    updateSelectionDefaultInput();
+    if (state.pricing.individualPanelOpen) {
+      renderIndividualPricingList();
+    }
+    persistPricingState();
+  });
+
+  elements.saveSelectionDefaultButton.addEventListener("click", () => {
+    const selectionId = state.pricing.selectedSelectionId;
+    if (!selectionId) {
+      return;
+    }
+
+    const rawValue = elements.selectionDefaultPriceInput.value.trim();
+    if (rawValue === "") {
+      delete state.pricing.selectionDefault[selectionId];
+      persistPricingState();
+      updateSelectionDefaultInput();
+      if (state.pricing.individualPanelOpen) {
+        renderIndividualPricingList();
+      }
+      renderPage();
+      return;
+    }
+
+    const parsedValue = parseMoneyValue(rawValue);
+    if (parsedValue === null) {
+      window.alert("Informe um preço válido maior ou igual a zero.");
+      updateSelectionDefaultInput();
+      return;
+    }
+
+    state.pricing.selectionDefault[selectionId] = parsedValue;
+    persistPricingState();
+    updateSelectionDefaultInput();
+    if (state.pricing.individualPanelOpen) {
+      renderIndividualPricingList();
+    }
+    renderPage();
+  });
+}
+
+function bindCategoryInput(input, category) {
+  input.addEventListener("change", () => {
+    const parsedValue = parseMoneyValue(input.value);
+    if (parsedValue === null) {
+      input.value = toInputValue(state.pricing.categoryBase[category]);
+      return;
+    }
+
+    state.pricing.categoryBase[category] = parsedValue;
+    persistPricingState();
+    renderPage();
+    if (state.pricing.individualPanelOpen) {
+      renderIndividualPricingList();
+    }
+  });
+}
+
+function renderSellerCenter() {
+  elements.priceBrInput.value = toInputValue(state.pricing.categoryBase.br);
+  elements.priceFwcInput.value = toInputValue(state.pricing.categoryBase.fwc);
+  elements.priceCocaInput.value = toInputValue(state.pricing.categoryBase.coca);
+  elements.priceOthersInput.value = toInputValue(state.pricing.categoryBase.outros);
+  elements.sellerSelectionSelect.value = state.pricing.selectedSelectionId;
+  updateSelectionDefaultInput();
+  renderIndividualPanelVisibility();
+
+  if (state.pricing.individualPanelOpen) {
+    renderIndividualPricingList();
+  }
+}
+
+function renderIndividualPanelVisibility() {
+  const isOpen = state.pricing.individualPanelOpen;
+  elements.individualPricingPanel.classList.toggle("open", isOpen);
+  elements.openIndividualPricingButton.setAttribute("aria-expanded", String(isOpen));
+
+  const actionLabel = elements.openIndividualPricingButton.querySelector("span");
+  if (actionLabel) {
+    actionLabel.textContent = isOpen ? "Ocultar lista ↑" : "Configurar agora →";
+  }
+}
+
+function updateSelectionDefaultInput() {
+  const selectionId = state.pricing.selectedSelectionId;
+  const hasCustomValue =
+    typeof state.pricing.selectionDefault[selectionId] === "number";
+  const value = hasCustomValue
+    ? state.pricing.selectionDefault[selectionId]
+    : getSelectionDefaultPrice(selectionId);
+
+  elements.selectionDefaultPriceInput.value = toInputValue(value);
+}
+
+function renderIndividualPricingList() {
+  const selectionId = state.pricing.selectedSelectionId;
+  const selectionPage = pages.find((page) => page.id === selectionId);
+  elements.individualStickerList.innerHTML = "";
+
+  if (!selectionPage) {
+    elements.individualPricingTitle.textContent = "Preço individual por figurinha";
+    elements.individualPricingDescription.textContent =
+      "Selecione uma seleção para configurar preços individuais.";
+    return;
+  }
+
+  elements.individualPricingTitle.textContent = `Preços individuais - ${selectionPage.title}`;
+  elements.individualPricingDescription.textContent =
+    "Digite apenas as figurinhas que terão preço diferente do padrão da seleção.";
+
+  const fragment = document.createDocumentFragment();
+
+  selectionPage.stickers.forEach((sticker) => {
+    const item = document.createElement("article");
+    item.className = "individual-sticker-item";
+
+    const title = document.createElement("strong");
+    title.textContent = `${sticker.name}`;
+
+    const code = document.createElement("span");
+    code.textContent = `Código: #${sticker.id}`;
+
+    const priceInput = document.createElement("input");
+    priceInput.type = "number";
+    priceInput.min = "0";
+    priceInput.step = "0.5";
+    const customPrice = state.pricing.stickerIndividual[sticker.id];
+    const fallbackPrice = getSelectionDefaultPrice(selectionPage.id);
+    priceInput.value =
+      typeof customPrice === "number" ? toInputValue(customPrice) : "";
+    priceInput.placeholder = `Padrão: ${formatCurrency(fallbackPrice)}`;
+
+    const hint = document.createElement("span");
+    hint.textContent = `Preço final: ${formatCurrency(
+      getStickerPrice(sticker.id, selectionPage.id)
+    )}`;
+
+    priceInput.addEventListener("change", () => {
+      const rawValue = priceInput.value.trim();
+      if (rawValue === "") {
+        delete state.pricing.stickerIndividual[sticker.id];
+      } else {
+        const parsedValue = parseMoneyValue(rawValue);
+        if (parsedValue === null) {
+          window.alert("Informe um preço válido maior ou igual a zero.");
+          priceInput.value =
+            typeof customPrice === "number" ? toInputValue(customPrice) : "";
+          return;
+        }
+
+        state.pricing.stickerIndividual[sticker.id] = parsedValue;
+      }
+
+      persistPricingState();
+      renderIndividualPricingList();
+      renderPage();
+    });
+
+    item.appendChild(title);
+    item.appendChild(code);
+    item.appendChild(priceInput);
+    item.appendChild(hint);
+    fragment.appendChild(item);
+  });
+
+  elements.individualStickerList.appendChild(fragment);
 }
 
 function renderPage() {
@@ -209,7 +459,7 @@ function renderPage() {
   elements.previousPageButton.disabled = state.currentPageIndex === 0;
   elements.nextPageButton.disabled = state.currentPageIndex === pages.length - 1;
 
-  const cards = page.stickers.map((sticker) => createStickerCard(sticker));
+  const cards = page.stickers.map((sticker) => createStickerCard(sticker, page));
   elements.stickersGrid.innerHTML = "";
   cards.forEach((card) => elements.stickersGrid.appendChild(card));
 
@@ -220,7 +470,7 @@ function renderPage() {
   elements.pageProgressLabel.textContent = `${obtainedInPage} de ${page.stickers.length} nesta página`;
 }
 
-function createStickerCard(sticker) {
+function createStickerCard(sticker, page) {
   const obtained = state.obtained.has(sticker.id);
   const button = document.createElement("button");
   button.type = "button";
@@ -236,12 +486,19 @@ function createStickerCard(sticker) {
   name.className = "sticker-name";
   name.textContent = sticker.name;
 
+  const price = document.createElement("span");
+  price.className = "sticker-price";
+  price.textContent = `Preço sugerido: ${formatCurrency(
+    getStickerPrice(sticker.id, page.id)
+  )}`;
+
   const status = document.createElement("span");
   status.className = "sticker-status";
   status.textContent = obtained ? "Figurinha obtida" : "Toque para marcar";
 
   button.appendChild(id);
   button.appendChild(name);
+  button.appendChild(price);
   button.appendChild(status);
 
   button.addEventListener("click", () => {
@@ -258,7 +515,7 @@ function toggleSticker(stickerId) {
     state.obtained.add(stickerId);
   }
 
-  persistState();
+  persistStickerState();
   renderPage();
   renderGlobalProgress();
 }
@@ -266,7 +523,8 @@ function toggleSticker(stickerId) {
 function renderGlobalProgress() {
   const totalStickers = pages.reduce((sum, page) => sum + page.stickers.length, 0);
   const obtainedCount = state.obtained.size;
-  const percent = totalStickers === 0 ? 0 : Math.round((obtainedCount / totalStickers) * 100);
+  const percent =
+    totalStickers === 0 ? 0 : Math.round((obtainedCount / totalStickers) * 100);
 
   elements.globalProgressLabel.textContent = `${obtainedCount} de ${totalStickers} figurinhas`;
   elements.globalProgressPercent.textContent = `${percent}%`;
@@ -277,13 +535,57 @@ function renderGlobalProgress() {
   );
 }
 
-function persistState() {
+function getStickerPrice(stickerId, pageId) {
+  const stickerPrice = state.pricing.stickerIndividual[stickerId];
+  if (typeof stickerPrice === "number") {
+    return stickerPrice;
+  }
+
+  const selectionPrice = state.pricing.selectionDefault[pageId];
+  if (typeof selectionPrice === "number") {
+    return selectionPrice;
+  }
+
+  const category = getCategoryFromPage(pageId);
+  return state.pricing.categoryBase[category];
+}
+
+function getSelectionDefaultPrice(selectionId) {
+  if (typeof state.pricing.selectionDefault[selectionId] === "number") {
+    return state.pricing.selectionDefault[selectionId];
+  }
+
+  const category = getCategoryFromPage(selectionId);
+  return state.pricing.categoryBase[category];
+}
+
+function getCategoryFromPage(pageId) {
+  if (pageId === "abertura" || pageId === "sedes") {
+    return "br";
+  }
+
+  if (pageId === "mata-mata") {
+    return "fwc";
+  }
+
+  if (pageId.startsWith("grupo-")) {
+    return "outros";
+  }
+
+  return "outros";
+}
+
+function persistStickerState() {
   const ids = Array.from(state.obtained.values());
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(ids));
+  window.localStorage.setItem(STICKER_STORAGE_KEY, JSON.stringify(ids));
+}
+
+function persistPricingState() {
+  window.localStorage.setItem(PRICING_STORAGE_KEY, JSON.stringify(state.pricing));
 }
 
 function loadSavedStickers() {
-  const stored = window.localStorage.getItem(STORAGE_KEY);
+  const stored = window.localStorage.getItem(STICKER_STORAGE_KEY);
   if (!stored) {
     return [];
   }
@@ -294,14 +596,116 @@ function loadSavedStickers() {
       return [];
     }
 
-    const allStickerIds = new Set(
-      pages.flatMap((page) => page.stickers.map((sticker) => sticker.id))
-    );
     return parsed.filter((id) => allStickerIds.has(id));
   } catch (error) {
     console.error("Falha ao carregar progresso salvo:", error);
     return [];
   }
+}
+
+function loadPricingState() {
+  const stored = window.localStorage.getItem(PRICING_STORAGE_KEY);
+  if (!stored) {
+    return structuredClone(defaultPricingState);
+  }
+
+  try {
+    const parsed = JSON.parse(stored);
+    if (!parsed || typeof parsed !== "object") {
+      return structuredClone(defaultPricingState);
+    }
+
+    const categoryBase = {
+      br: sanitizePriceValue(parsed.categoryBase?.br, defaultPricingState.categoryBase.br),
+      fwc: sanitizePriceValue(
+        parsed.categoryBase?.fwc,
+        defaultPricingState.categoryBase.fwc
+      ),
+      coca: sanitizePriceValue(
+        parsed.categoryBase?.coca,
+        defaultPricingState.categoryBase.coca
+      ),
+      outros: sanitizePriceValue(
+        parsed.categoryBase?.outros,
+        defaultPricingState.categoryBase.outros
+      ),
+    };
+
+    const selectionDefault = {};
+    if (parsed.selectionDefault && typeof parsed.selectionDefault === "object") {
+      Object.entries(parsed.selectionDefault).forEach(([selectionId, value]) => {
+        if (!pages.some((page) => page.id === selectionId)) {
+          return;
+        }
+
+        const sanitized = sanitizePriceValue(value, null);
+        if (sanitized !== null) {
+          selectionDefault[selectionId] = sanitized;
+        }
+      });
+    }
+
+    const stickerIndividual = {};
+    if (parsed.stickerIndividual && typeof parsed.stickerIndividual === "object") {
+      Object.entries(parsed.stickerIndividual).forEach(([stickerId, value]) => {
+        if (!allStickerIds.has(stickerId)) {
+          return;
+        }
+
+        const sanitized = sanitizePriceValue(value, null);
+        if (sanitized !== null) {
+          stickerIndividual[stickerId] = sanitized;
+        }
+      });
+    }
+
+    const selectedSelectionId = selectionPages.some(
+      (page) => page.id === parsed.selectedSelectionId
+    )
+      ? parsed.selectedSelectionId
+      : defaultPricingState.selectedSelectionId;
+
+    return {
+      categoryBase,
+      selectionDefault,
+      stickerIndividual,
+      selectedSelectionId,
+      individualPanelOpen: Boolean(parsed.individualPanelOpen),
+    };
+  } catch (error) {
+    console.error("Falha ao carregar tabela de preços:", error);
+    return structuredClone(defaultPricingState);
+  }
+}
+
+function parseMoneyValue(rawValue) {
+  const normalized = String(rawValue).trim().replace(",", ".");
+  if (normalized === "") {
+    return null;
+  }
+
+  const value = Number(normalized);
+  if (!Number.isFinite(value) || value < 0) {
+    return null;
+  }
+
+  return Math.round(value * 100) / 100;
+}
+
+function sanitizePriceValue(value, fallback) {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+    return fallback;
+  }
+
+  return Math.round(value * 100) / 100;
+}
+
+function formatCurrency(value) {
+  return currencyFormatter.format(value);
+}
+
+function toInputValue(value) {
+  return String(value);
 }
 
 function createStickers(prefix, label, amount) {

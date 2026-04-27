@@ -16,6 +16,76 @@
         </p>
       </header>
 
+      <section class="seller-center" aria-label="Central do vendedor">
+        <div class="seller-header">
+          <h2>Central do vendedor</h2>
+          <p>Configure preços por categoria, seleção e figurinha individual.</p>
+        </div>
+
+        <div class="seller-cards">
+          <article class="seller-card" data-price-category="br">
+            <h3>BR</h3>
+            <p>Base para figurinhas de abertura e sedes.</p>
+            <label for="priceBrInput">Preço base (R$)</label>
+            <input id="priceBrInput" type="number" min="0" step="0.5" />
+          </article>
+
+          <article class="seller-card" data-price-category="fwc">
+            <h3>Cromos FWC</h3>
+            <p>Base para figurinhas especiais da fase final.</p>
+            <label for="priceFwcInput">Preço base (R$)</label>
+            <input id="priceFwcInput" type="number" min="0" step="0.5" />
+          </article>
+
+          <article class="seller-card" data-price-category="coca">
+            <h3>Coca-Cola</h3>
+            <p>Base para figurinhas promocionais.</p>
+            <label for="priceCocaInput">Preço base (R$)</label>
+            <input id="priceCocaInput" type="number" min="0" step="0.5" />
+          </article>
+
+          <article class="seller-card" data-price-category="outros">
+            <h3>Outros Times</h3>
+            <p>Base padrão para qualquer outra figurinha.</p>
+            <label for="priceOthersInput">Preço base (R$)</label>
+            <input id="priceOthersInput" type="number" min="0" step="0.5" />
+          </article>
+
+          <button
+            id="openIndividualPricingButton"
+            type="button"
+            class="seller-card seller-card-action"
+          >
+            <h3>Preço individual</h3>
+            <p>
+              Clique para escolher a seleção e abrir a lista de figurinhas com preço
+              unitário.
+            </p>
+            <span>Configurar agora →</span>
+          </button>
+        </div>
+
+        <div class="seller-selection-controls">
+          <label for="sellerSelectionSelect">Seleção:</label>
+          <select id="sellerSelectionSelect"></select>
+
+          <label for="selectionDefaultPriceInput">Preço padrão da seleção (R$):</label>
+          <input id="selectionDefaultPriceInput" type="number" min="0" step="0.5" />
+
+          <button id="saveSelectionDefaultButton" type="button">Salvar seleção</button>
+        </div>
+
+        <section id="individualPricingPanel" class="individual-pricing-panel">
+          <div class="individual-pricing-header">
+            <h3 id="individualPricingTitle">Preço individual por figurinha</h3>
+            <p id="individualPricingDescription">
+              Ajuste o valor de cada figurinha separadamente.
+            </p>
+          </div>
+          <div id="individualStickerList" class="individual-sticker-list"></div>
+        </section>
+      </section>
+
       <section class="progress-panel" aria-label="Progresso geral do álbum">
         <div class="progress-text">
           <strong id="globalProgressLabel">0 de 0 figurinhas</strong>

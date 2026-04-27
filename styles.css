@@ -49,6 +49,7 @@ body {
   opacity: 0.92;
 }
 
+.seller-center,
 .progress-panel,
 .album-controls,
 .album-page,
@@ -58,6 +59,169 @@ body {
   border-radius: 0.85rem;
   padding: 0.95rem;
   box-shadow: 0 10px 20px rgba(15, 23, 42, 0.05);
+}
+
+.seller-center {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.seller-header h2 {
+  margin: 0;
+  font-size: clamp(1.1rem, 2.3vw, 1.4rem);
+}
+
+.seller-header p {
+  margin: 0.3rem 0 0;
+  color: var(--muted);
+}
+
+.seller-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.65rem;
+}
+
+.seller-card {
+  border: 1px solid #1e293b;
+  border-radius: 0.8rem;
+  background: linear-gradient(120deg, #041b44, #111827);
+  color: #f8fafc;
+  padding: 0.7rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.seller-card h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.seller-card p {
+  margin: 0;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.seller-card label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+.seller-card input {
+  border: 1px solid #475569;
+  border-radius: 0.45rem;
+  background: rgba(15, 23, 42, 0.7);
+  color: #f8fafc;
+  padding: 0.45rem 0.5rem;
+  font-weight: 700;
+}
+
+.seller-card[data-price-category="br"] {
+  background: linear-gradient(130deg, #0b5f1b, #1c3f10);
+}
+
+.seller-card[data-price-category="fwc"] {
+  background: linear-gradient(130deg, #8f6000, #3f2906);
+}
+
+.seller-card[data-price-category="coca"] {
+  background: linear-gradient(130deg, #861414, #3d0606);
+}
+
+.seller-card[data-price-category="outros"] {
+  background: linear-gradient(130deg, #102a63, #121525);
+}
+
+.seller-card-action {
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid #0ea5e9;
+  background: linear-gradient(130deg, #1d4ed8, #0f172a);
+}
+
+.seller-card-action:hover {
+  background: linear-gradient(130deg, #1e40af, #020617);
+}
+
+.seller-card-action span {
+  margin-top: 0.2rem;
+  color: #bfdbfe;
+  font-weight: 700;
+}
+
+.seller-selection-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.7rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 0.75rem;
+  background: #f8fafc;
+}
+
+.seller-selection-controls label {
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.seller-selection-controls select,
+.seller-selection-controls input {
+  min-width: 150px;
+}
+
+.individual-pricing-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: #f8fafc;
+  padding: 0.8rem;
+  display: none;
+  gap: 0.7rem;
+}
+
+.individual-pricing-panel.open {
+  display: grid;
+}
+
+.individual-pricing-header h3 {
+  margin: 0;
+}
+
+.individual-pricing-header p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.individual-sticker-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.individual-sticker-item {
+  border: 1px solid #cbd5e1;
+  border-radius: 0.7rem;
+  padding: 0.6rem;
+  background: #ffffff;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.individual-sticker-item strong {
+  font-size: 0.93rem;
+}
+
+.individual-sticker-item span {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.individual-sticker-item input {
+  border: 1px solid #94a3b8;
+  border-radius: 0.45rem;
+  padding: 0.43rem 0.5rem;
 }
 
 .progress-text {
@@ -241,6 +405,7 @@ button.danger:hover {
   }
 
   .progress-panel,
+  .seller-center,
   .album-controls,
   .album-page,
   .footer-actions {
