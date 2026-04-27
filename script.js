@@ -134,7 +134,7 @@ function load() {
     if(d.stickerPriceOverrides && typeof d.stickerPriceOverrides === 'object') {
       const parsed = {};
       Object.entries(d.stickerPriceOverrides).forEach(([id, value]) => {
-        const validSticker = /^[A-Z]{3}\d{2}$/.test(id);
+        const validSticker = /^(?:[A-Z]{3}\d{2}|CC\d{2})$/.test(id);
         if(!validSticker) return;
         parsed[id] = toValidPrice(value, null);
       });
@@ -869,6 +869,7 @@ function norm(s) {
 function parseCustomerMessage(text) {
   // Step 1: normalize + split into candidate items
   const split = norm(text)
+    .replace(/\n+/g, '|')
     .replace(/--+/g, '|')
     .replace(/[;,]/g, '|')
     .replace(/\s*\|\s*/g, '|')
@@ -909,8 +910,25 @@ function parseCustomerMessage(text) {
 }
 
 function parseItem(raw, found) {
-  raw = raw.trim();
+  raw = raw.trim().replace(/[.!?]+$/g, '');
   if(!raw) return false;
+
+  // Special collections
+  const special = raw.match(/^(fwc|cc)\s*-?\s*0?(\d{1,2})$/i);
+  if(special) {
+    const prefix = special[1].toUpperCase();
+    const num = parseInt(special[2], 10);
+    if(prefix === 'FWC' && num >= 0 && num <= 19) {
+      const id = `FWC${String(num).padStart(2, '0')}`;
+      found.push({ id, code: 'FWC', num, raw });
+      return true;
+    }
+    if(prefix === 'CC' && num >= 1 && num <= 14) {
+      const id = `CC${String(num).padStart(2, '0')}`;
+      found.push({ id, code: 'CC', num, raw });
+      return true;
+    }
+  }
 
   // Pattern: (text)(optional space)(1 or 2 digit number)
   const m = raw.match(/^(.+?)\s*(\d{1,2})$/);
@@ -976,6 +994,29 @@ function initVendedor() {
     if(!code || isNaN(price)) return;
     teamPriceOverrides[code] = toValidPrice(price, 0);
     renderOverrides();
+    updatePriceSummary();
+    if(individualPricingOpen) renderIndividualPricingList();
+    save();
+  });
+
+  // Fixed mass cards
+  document.getElementById('applyBadgesPriceBtn').addEventListener('click', () => {
+    const value = toValidPrice(parseFloat(document.getElementById('priceAllBadges').value), null);
+    if(value === null) return;
+    TEAMS.forEach(team => {
+      stickerPriceOverrides[`${team.code}01`] = value;
+    });
+    updatePriceSummary();
+    if(individualPricingOpen) renderIndividualPricingList();
+    save();
+  });
+
+  document.getElementById('applyTeamPhotosPriceBtn').addEventListener('click', () => {
+    const value = toValidPrice(parseFloat(document.getElementById('priceAllTeamPhotos').value), null);
+    if(value === null) return;
+    TEAMS.forEach(team => {
+      stickerPriceOverrides[`${team.code}13`] = value;
+    });
     updatePriceSummary();
     if(individualPricingOpen) renderIndividualPricingList();
     save();

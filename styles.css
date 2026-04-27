@@ -1078,6 +1078,8 @@ html, body {
 .vd-cat-fwc    { background: linear-gradient(135deg, rgba(180,130,0,.3), rgba(100,70,0,.2)); border-color: rgba(212,168,0,.3) !important; }
 .vd-cat-coca   { background: linear-gradient(135deg, rgba(180,20,20,.3), rgba(100,10,10,.2)); border-color: rgba(200,50,50,.3) !important; }
 .vd-cat-other  { background: linear-gradient(135deg, rgba(30,80,140,.3), rgba(15,40,80,.2)); border-color: rgba(52,152,219,.3) !important; }
+.vd-cat-badges { background: linear-gradient(135deg, rgba(22,101,52,.36), rgba(20,83,45,.2)); border-color: rgba(74,222,128,.32) !important; }
+.vd-cat-photo  { background: linear-gradient(135deg, rgba(126,34,206,.32), rgba(88,28,135,.22)); border-color: rgba(192,132,252,.32) !important; }
 .vd-cat-individual {
   background: linear-gradient(135deg, rgba(29,78,216,.35), rgba(15,23,42,.25));
   border-color: rgba(59,130,246,.4) !important;
@@ -1090,6 +1092,21 @@ html, body {
 .vd-cat-label { font-family: var(--font-c); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: rgba(255,255,255,.65); text-align: center; }
 .vd-cat-helper { font-size: 10px; color: rgba(255,255,255,.55); }
 .vd-cat-small { font-family: var(--font-c); font-size: 10px; color: var(--gold-lt); font-weight: 700; }
+.vd-mini-apply {
+  margin-top: 4px;
+  width: 100%;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(0,0,0,.22);
+  color: rgba(255,255,255,.76);
+  border-radius: 7px;
+  padding: 6px 8px;
+  font-family: var(--font-c);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .03em;
+  cursor: pointer;
+}
+.vd-mini-apply:hover { background: rgba(255,255,255,.14); }
 
 .vd-cat-input-wrap {
   display: flex;
@@ -1127,7 +1144,7 @@ html, body {
 .vd-ov-select-wrap { flex: 1; min-width: 160px; }
 .vd-team-select {
   width: 100%;
-  background: rgba(255,255,255,.07);
+  background: rgba(10,10,10,.88);
   border: 1px solid rgba(255,255,255,.15);
   border-radius: 7px;
   padding: 7px 10px;
@@ -1136,6 +1153,10 @@ html, body {
   font-size: 13px;
   outline: none;
   cursor: pointer;
+}
+.vd-team-select option {
+  background: #101010;
+  color: #f8fafc;
 }
 .vd-add-override-btn {
   padding: 7px 14px; border-radius: 7px;
