@@ -1,102 +1,55 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Álbum Copa do Mundo 2026</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
+  <div class="app" id="app">
 
-  <div class="app">
-
-    <!-- TOP BAR -->
     <header class="topbar">
       <div class="topbar-brand">
-        <span class="topbar-trophy">⚽</span>
+        <span class="trophy">⚽</span>
         <div>
-          <h1>Álbum Copa do Mundo</h1>
+          <h1>Álbum Copa do Mundo 2026</h1>
           <p>FIFA World Cup 2026™ · USA · Canada · México</p>
         </div>
       </div>
-      <div class="topbar-progress">
-        <div class="progress-info">
-          <span id="globalLabel">0 de 960</span>
+      <div class="global-prog">
+        <div class="prog-row">
+          <span id="globalLabel">0 de 0</span>
           <strong id="globalPct">0%</strong>
         </div>
-        <div class="progress-track">
-          <div class="progress-fill" id="pbarFill"></div>
-        </div>
+        <div class="prog-track"><div class="prog-fill" id="progFill"></div></div>
       </div>
     </header>
 
-    <!-- NAVIGATION -->
     <nav class="nav-row">
-      <button class="nav-arrow" id="btnPrev" title="País anterior">‹</button>
-
-      <button class="team-picker" id="btnTeam">
-        <span class="picker-flag" id="btnFlag">🇧🇷</span>
+      <button class="nav-arr" id="btnPrev">‹</button>
+      <button class="picker-btn" id="btnPicker">
+        <span class="picker-flag" id="pickerFlag">⚽</span>
         <div class="picker-info">
-          <span class="picker-name" id="btnName">Brasil</span>
-          <span class="picker-meta">
-            <span class="picker-grp" id="btnGrp">Grupo C</span>
-            <span class="picker-done" id="btnDone" style="display:none">✓ Completo</span>
-          </span>
+          <span class="picker-name" id="pickerName">Carregando…</span>
+          <span class="picker-sub" id="pickerSub"></span>
         </div>
-        <span class="picker-prog" id="btnProg">0/20</span>
-        <span class="picker-arrow" id="pickerArrow">▼</span>
+        <span class="picker-prog" id="pickerProg"></span>
+        <span class="picker-chevron" id="pickerChevron">▼</span>
       </button>
-
-      <button class="nav-arrow" id="btnNext" title="Próximo país">›</button>
+      <button class="nav-arr" id="btnNext">›</button>
     </nav>
 
-    <!-- TEAM SELECTOR -->
     <div class="selector" id="selector"></div>
 
-    <!-- ALBUM SPREAD -->
-    <main class="spread" id="spread">
+    <main class="spread" id="spread"></main>
 
-      <!-- LEFT PAGE -->
-      <div class="page page-left">
-        <div class="page-header" id="pageHeader">
-          <div class="page-header-top">WE ARE</div>
-          <div class="page-header-name" id="hdrName">BRASIL</div>
-          <div class="page-header-sub">
-            <span>FIFA World Cup 2026™</span>
-            <span class="hdr-grp-tag" id="hdrGrp">GRP C</span>
-            <span class="hdr-prog" id="hdrProg">0/20</span>
-          </div>
-        </div>
-        <div class="sticker-grid grid-left" id="gridLeft"></div>
-      </div>
-
-      <!-- SPINE -->
-      <div class="spine">
-        <div class="spine-line"></div>
-      </div>
-
-      <!-- RIGHT PAGE -->
-      <div class="page page-right">
-        <div class="page-spacer"></div>
-        <div class="sticker-grid grid-right" id="gridRight"></div>
-      </div>
-
-    </main>
-
-    <!-- ACTIONS -->
-    <footer class="actions">
-      <button class="action-btn action-mark" id="btnMark">✓ Marcar página toda</button>
-      <button class="action-btn action-unmark" id="btnUnmark">✕ Desmarcar página toda</button>
-      <div id="resetArea">
-        <button class="action-btn action-reset" id="btnRst">↺ Reiniciar álbum</button>
-      </div>
-    </footer>
+    <footer class="actions" id="actions"></footer>
 
   </div>
-
   <script src="script.js"></script>
 </body>
 </html>
