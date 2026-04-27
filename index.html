@@ -1,133 +1,425 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Álbum da Copa do Mundo 2026</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app">
-      <header class="app-header">
-        <h1>Álbum da Copa do Mundo 2026</h1>
-        <p>
-          Marque suas figurinhas, acompanhe o progresso e folheie o álbum página por
-          página.
-        </p>
-      </header>
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Copa 2026 — Álbum Digital</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@400;500;600;700&family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icons/7.2.3/css/flag-icons.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
 
-      <section class="seller-center" aria-label="Central do vendedor">
-        <div class="seller-header">
-          <h2>Central do vendedor</h2>
-          <p>Configure preços por categoria, seleção e figurinha individual.</p>
-        </div>
+<div class="app-shell" id="appShell">
 
-        <div class="seller-cards">
-          <article class="seller-card" data-price-category="br">
-            <h3>BR</h3>
-            <p>Base para figurinhas de abertura e sedes.</p>
-            <label for="priceBrInput">Preço base (R$)</label>
-            <input id="priceBrInput" type="number" min="0" step="0.5" />
-          </article>
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-ball">⚽</span>
+      <div class="sidebar-brand">
+        <span class="sidebar-brand-main">COPA</span>
+        <span class="sidebar-brand-year">2026</span>
+      </div>
+    </div>
 
-          <article class="seller-card" data-price-category="fwc">
-            <h3>Cromos FWC</h3>
-            <p>Base para figurinhas especiais da fase final.</p>
-            <label for="priceFwcInput">Preço base (R$)</label>
-            <input id="priceFwcInput" type="number" min="0" step="0.5" />
-          </article>
+    <nav class="sidebar-nav">
+      <button class="snav-btn active" data-section="album">
+        <span class="snav-icon">📖</span>
+        <span class="snav-label">Álbum</span>
+        <span class="snav-badge" id="navAlbumBadge">0%</span>
+      </button>
+      <button class="snav-btn" data-section="trocas">
+        <span class="snav-icon">🔄</span>
+        <span class="snav-label">Trocas</span>
+        <span class="snav-badge snav-badge-blue" id="navTrocasBadge">0</span>
+      </button>
+      <button class="snav-btn" data-section="vendas">
+        <span class="snav-icon">💰</span>
+        <span class="snav-label">Vendas</span>
+        <span class="snav-badge snav-badge-gold" id="navVendasBadge">0</span>
+      </button>
+      <button class="snav-btn" data-section="circle">
+        <span class="snav-icon">📍</span>
+        <span class="snav-label">Inner Circle</span>
+        <span class="snav-badge snav-badge-red" id="navCircleBadge">●</span>
+      </button>
+      <button class="snav-btn" data-section="vendedor">
+        <span class="snav-icon">🏪</span>
+        <span class="snav-label">Central do Vendedor</span>
+        <span class="snav-badge snav-badge-green" id="navVendedorBadge">R$</span>
+      </button>
+    </nav>
 
-          <article class="seller-card" data-price-category="coca">
-            <h3>Coca-Cola</h3>
-            <p>Base para figurinhas promocionais.</p>
-            <label for="priceCocaInput">Preço base (R$)</label>
-            <input id="priceCocaInput" type="number" min="0" step="0.5" />
-          </article>
+    <div class="sidebar-profile" id="sidebarProfile">
+      <div class="sp-avatar" id="spAvatar">?</div>
+      <div class="sp-info">
+        <div class="sp-name" id="spName">Seu perfil</div>
+        <div class="sp-city" id="spCity">Configure →</div>
+      </div>
+    </div>
+  </aside>
 
-          <article class="seller-card" data-price-category="outros">
-            <h3>Outros Times</h3>
-            <p>Base padrão para qualquer outra figurinha.</p>
-            <label for="priceOthersInput">Preço base (R$)</label>
-            <input id="priceOthersInput" type="number" min="0" step="0.5" />
-          </article>
+  <!-- ═══ MAIN CONTENT ═══ -->
+  <main class="main" id="main">
 
-          <button
-            id="openIndividualPricingButton"
-            type="button"
-            class="seller-card seller-card-action"
-          >
-            <h3>Preço individual</h3>
-            <p>
-              Clique para escolher a seleção e abrir a lista de figurinhas com preço
-              unitário.
-            </p>
-            <span>Configurar agora →</span>
-          </button>
-        </div>
+    <!-- ── SECTION: ÁLBUM ── -->
+    <section class="section active" id="sectionAlbum">
+      <div class="album-section">
 
-        <div class="seller-selection-controls">
-          <label for="sellerSelectionSelect">Seleção:</label>
-          <select id="sellerSelectionSelect"></select>
-
-          <label for="selectionDefaultPriceInput">Preço padrão da seleção (R$):</label>
-          <input id="selectionDefaultPriceInput" type="number" min="0" step="0.5" />
-
-          <button id="saveSelectionDefaultButton" type="button">Salvar seleção</button>
-        </div>
-
-        <section id="individualPricingPanel" class="individual-pricing-panel">
-          <div class="individual-pricing-header">
-            <h3 id="individualPricingTitle">Preço individual por figurinha</h3>
-            <p id="individualPricingDescription">
-              Ajuste o valor de cada figurinha separadamente.
-            </p>
+        <!-- Top HUD -->
+        <div class="album-hud">
+          <div class="hud-stats">
+            <div class="hud-stat">
+              <span class="hud-stat-val" id="hudGot">0</span>
+              <span class="hud-stat-lbl">obtidas</span>
+            </div>
+            <div class="hud-stat-div">/</div>
+            <div class="hud-stat">
+              <span class="hud-stat-val hud-total" id="hudTotal">980</span>
+              <span class="hud-stat-lbl">total</span>
+            </div>
+            <div class="hud-bar-wrap">
+              <div class="hud-bar"><div class="hud-bar-fill" id="hudFill"></div></div>
+              <span class="hud-pct" id="hudPct">0%</span>
+            </div>
           </div>
-          <div id="individualStickerList" class="individual-sticker-list"></div>
-        </section>
-      </section>
-
-      <section class="progress-panel" aria-label="Progresso geral do álbum">
-        <div class="progress-text">
-          <strong id="globalProgressLabel">0 de 0 figurinhas</strong>
-          <span id="globalProgressPercent">0%</span>
-        </div>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-          <div id="globalProgressFill" class="progress-fill"></div>
-        </div>
-      </section>
-
-      <section class="album-controls" aria-label="Controles do álbum">
-        <button id="previousPageButton" type="button">← Página anterior</button>
-
-        <label for="pageSelect" class="select-label">Página:</label>
-        <select id="pageSelect"></select>
-
-        <button id="nextPageButton" type="button">Próxima página →</button>
-      </section>
-
-      <section id="albumPage" class="album-page" aria-live="polite">
-        <div class="page-header">
-          <p id="pageCounter" class="page-counter">Página 1 de 1</p>
-          <h2 id="pageTitle">Carregando...</h2>
-          <p id="pageDescription"></p>
+          <div class="hud-actions">
+            <button class="huda-btn huda-mark" id="btnMark">✓ Marcar página</button>
+            <button class="huda-btn huda-unmark" id="btnUnmark">✕ Desmarcar</button>
+            <button class="huda-btn huda-reset" id="resetBtn">↺</button>
+          </div>
         </div>
 
-        <div class="page-progress">
-          <span id="pageProgressLabel">0 de 0 nesta página</span>
+        <!-- Album book -->
+        <div class="album-main">
+          <button class="page-arr arr-left" id="btnPrev">‹</button>
+
+          <div class="book" id="book">
+            <div class="book-spine">
+              <div class="book-spine-title">FIFA WORLD CUP 2026</div>
+            </div>
+            <div class="book-page book-page-l" id="pageL"></div>
+            <div class="book-page book-page-r" id="pageR"></div>
+          </div>
+
+          <button class="page-arr arr-right" id="btnNext">›</button>
         </div>
 
-        <div id="stickersGrid" class="stickers-grid"></div>
-      </section>
+        <!-- Bottom picker -->
+        <div class="album-footer">
+          <div class="picker-wrap" id="pickerWrap">
+            <button class="picker-btn" id="pickerBtn">
+              <span class="picker-flag-wrap" id="pickerFlagWrap"></span>
+              <div class="picker-info">
+                <span class="picker-name" id="pickerName">Brasil</span>
+                <span class="picker-meta" id="pickerMeta">Grupo C · 0/20</span>
+              </div>
+              <span class="picker-prog" id="pickerProg">0/20</span>
+              <span class="picker-chevron" id="pickerChevron">▼</span>
+            </button>
+            <div class="picker-dropdown" id="pickerDropdown"></div>
+          </div>
+        </div>
 
-      <section class="footer-actions" aria-label="Ações extras">
-        <button id="markAllPageButton" type="button">Marcar página inteira</button>
-        <button id="unmarkAllPageButton" type="button">Desmarcar página inteira</button>
-        <button id="resetAlbumButton" type="button" class="danger">
-          Reiniciar álbum completo
-        </button>
-      </section>
-    </main>
+      </div>
+    </section>
 
-    <script src="script.js"></script>
-  </body>
+    <!-- ── SECTION: TROCAS ── -->
+    <section class="section" id="sectionTrocas">
+      <div class="content-section">
+        <div class="cs-header">
+          <h2 class="cs-title">🔄 Figurinhas para Troca</h2>
+          <p class="cs-sub">Marque suas repetidas e encontre parceiros de troca</p>
+        </div>
+
+        <div class="trocas-layout">
+          <!-- My duplicates -->
+          <div class="trocas-card">
+            <div class="tc-head">
+              <h3>Minhas Repetidas</h3>
+              <span class="tc-count" id="dupCount">0 figurinhas</span>
+            </div>
+            <div class="tc-hint">Clique numa figurinha que você já tem no álbum para marcá-la como repetida</div>
+            <div class="tc-list" id="dupList"></div>
+          </div>
+
+          <!-- What I want -->
+          <div class="trocas-card">
+            <div class="tc-head">
+              <h3>Quero Receber</h3>
+              <span class="tc-count" id="wantCount">0 figurinhas</span>
+            </div>
+            <div class="tc-hint">Figurinhas que ainda não tenho — candidatas a pedido de troca</div>
+            <div class="tc-list" id="wantList"></div>
+          </div>
+        </div>
+
+        <div class="troca-promo">
+          <div class="tp-icon">💡</div>
+          <div class="tp-text">
+            <strong>Dica:</strong> Use o <strong>Inner Circle</strong> para encontrar colecionadores perto de você que têm as figurinhas que faltam e precisam das suas repetidas!
+          </div>
+          <button class="tp-btn" onclick="switchSection('circle')">Ir para Inner Circle →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: VENDAS ── -->
+    <section class="section" id="sectionVendas">
+      <div class="content-section">
+        <div class="cs-header">
+          <h2 class="cs-title">💰 Compra & Venda</h2>
+          <p class="cs-sub">Defina preço para suas repetidas e veja ofertas disponíveis</p>
+        </div>
+
+        <div class="vendas-layout">
+          <!-- Minhas à venda -->
+          <div class="vendas-col">
+            <div class="vc-head">
+              <h3>Minhas Figurinhas à Venda</h3>
+              <div class="vc-price-row">
+                <span>Preço padrão:</span>
+                <div class="price-input-wrap">
+                  <span class="price-currency">R$</span>
+                  <input type="number" class="price-input" id="defaultPrice" value="2" min="0.5" max="50" step="0.5"/>
+                </div>
+                <span>por figurinha</span>
+              </div>
+            </div>
+            <div class="vc-list" id="saleList">
+              <div class="empty-state">
+                <span>💸</span>
+                <p>Marque figurinhas como repetidas na seção de Trocas para listá-las aqui</p>
+              </div>
+            </div>
+            <div class="vc-total-row" id="saleTotalRow" style="display:none">
+              <span>Total estimado:</span>
+              <strong id="saleTotal">R$ 0,00</strong>
+            </div>
+          </div>
+
+          <!-- Marketplace simulado -->
+          <div class="vendas-col">
+            <div class="vc-head">
+              <h3>Mercado (Demo)</h3>
+              <span class="demo-badge">SIMULADO</span>
+            </div>
+            <div class="vc-list" id="marketList"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── SECTION: INNER CIRCLE ── -->
+    <section class="section" id="sectionCircle">
+      <div class="content-section">
+        <div class="cs-header">
+          <h2 class="cs-title">📍 Inner Circle</h2>
+          <p class="cs-sub">Encontre colecionadores próximos para trocar figurinhas</p>
+        </div>
+
+        <!-- Profile setup -->
+        <div class="ic-profile-card" id="icProfileCard">
+          <div class="icp-title">Seu perfil de colecionador</div>
+          <div class="icp-row">
+            <div class="icp-field">
+              <label>Nome</label>
+              <input type="text" id="icName" placeholder="Seu nome" maxlength="30"/>
+            </div>
+            <div class="icp-field">
+              <label>Cidade</label>
+              <input type="text" id="icCity" placeholder="Sua cidade" maxlength="40"/>
+            </div>
+            <button class="icp-save" id="icSaveProfile">Salvar & Ativar Localização</button>
+          </div>
+          <div class="icp-hint" id="icLocStatus">🔒 Sua localização é usada apenas para encontrar colecionadores próximos</div>
+        </div>
+
+        <!-- Map area + nearby list -->
+        <div class="ic-layout" id="icLayout">
+          <!-- Radar visual -->
+          <div class="ic-radar-wrap">
+            <div class="ic-radar" id="icRadar">
+              <div class="radar-ring r1"></div>
+              <div class="radar-ring r2"></div>
+              <div class="radar-ring r3"></div>
+              <div class="radar-sweep"></div>
+              <div class="radar-center">📍</div>
+              <div class="radar-dots" id="radarDots"></div>
+            </div>
+            <div class="radar-legend">
+              <div class="rl-item"><span class="rl-dot rl-green"></span> Tem o que quero</div>
+              <div class="rl-item"><span class="rl-dot rl-blue"></span> Quer o que tenho</div>
+              <div class="rl-item"><span class="rl-dot rl-gold"></span> Troca perfeita!</div>
+            </div>
+          </div>
+
+          <!-- Nearby list -->
+          <div class="ic-nearby">
+            <div class="icn-head">
+              <span>Colecionadores próximos</span>
+              <span class="icn-radius" id="icRadius">raio: 10 km</span>
+            </div>
+            <input type="range" class="radius-slider" id="radiusSlider" min="1" max="50" value="10"/>
+            <div class="icn-list" id="icNearbyList"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: CENTRAL DO VENDEDOR ── -->
+    <section class="section" id="sectionVendedor">
+      <div class="content-section">
+
+        <div class="cs-header">
+          <h2 class="cs-title">🏪 Central do Vendedor</h2>
+          <p class="cs-sub">Configure seus preços e calcule orçamentos instantaneamente</p>
+        </div>
+
+        <!-- PRICE CONFIG -->
+        <div class="vd-price-config">
+          <div class="vd-pc-title">💲 Tabela de Preços</div>
+
+          <div class="vd-categories">
+            <div class="vd-cat-card vd-cat-brasil">
+              <div class="vd-cat-icon">🇧🇷</div>
+              <div class="vd-cat-label">Brasil</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesBrasil" value="8.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-fwc">
+              <div class="vd-cat-icon">⭐</div>
+              <div class="vd-cat-label">Cromos FWC</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesFwc" value="12.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-coca">
+              <div class="vd-cat-icon">🥤</div>
+              <div class="vd-cat-label">Coca-Cola</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesCoca" value="5.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-other">
+              <div class="vd-cat-icon">🌍</div>
+              <div class="vd-cat-label">Outros Times</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesOther" value="3.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-team override -->
+          <div class="vd-override-section">
+            <button class="vd-override-toggle" id="overrideToggle">
+              ⚙️ Preço personalizado por seleção <span id="overrideCount"></span> <span class="vd-toggle-chevron">▼</span>
+            </button>
+            <div class="vd-override-body" id="overrideBody" style="display:none">
+              <div class="vd-override-add">
+                <div class="vd-ov-select-wrap">
+                  <select class="vd-team-select" id="overrideTeamSelect"></select>
+                </div>
+                <div class="vd-cat-input-wrap">
+                  <span class="vd-currency">R$</span>
+                  <input type="number" class="vd-price-inp" id="overridePrice" value="5.00" min="0.5" step="0.5" style="width:65px"/>
+                </div>
+                <button class="vd-add-override-btn" id="addOverrideBtn">+ Adicionar</button>
+              </div>
+              <div class="vd-overrides-list" id="overridesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PARSER -->
+        <div class="vd-parser-layout">
+
+          <!-- INPUT -->
+          <div class="vd-parser-input-col">
+            <div class="vd-panel-title">📩 Mensagem do Cliente</div>
+            <textarea class="vd-textarea" id="customerMsg" placeholder="Cole aqui a mensagem do cliente...&#10;&#10;Exemplo:&#10;Bom dia! Quero as BRA1, BRA2; ARG 5. BRASIL 12, Portugal 10 e ESP4"></textarea>
+            <button class="vd-parse-btn" id="parseBtn">
+              <span class="vd-parse-icon">⚡</span>
+              Calcular Orçamento
+            </button>
+            <div class="vd-price-summary" id="vdPriceSummary"></div>
+          </div>
+
+          <!-- OUTPUT -->
+          <div class="vd-parser-output-col" id="vdOutput" style="display:none">
+
+            <!-- Itemized -->
+            <div class="vd-panel-title">📋 Itens do Pedido</div>
+            <div class="vd-items-list" id="vdItemsList"></div>
+
+            <div class="vd-total-bar" id="vdTotalBar">
+              <span class="vd-total-label">TOTAL DO PEDIDO</span>
+              <span class="vd-total-value" id="vdTotalValue">R$ 0,00</span>
+            </div>
+
+            <!-- Unknown -->
+            <div class="vd-unknown-box" id="vdUnknownBox" style="display:none">
+              <div class="vd-unknown-title">⚠️ Não identificadas</div>
+              <div class="vd-unknown-list" id="vdUnknownList"></div>
+            </div>
+
+            <!-- Ready response -->
+            <div class="vd-response-panel">
+              <div class="vd-response-header">
+                <span class="vd-panel-title">💬 Resposta Pronta para Enviar</span>
+                <button class="vd-copy-btn" id="vdCopyBtn">📋 Copiar</button>
+              </div>
+              <div class="vd-response-text" id="vdResponseText"></div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Profile Modal -->
+<div class="modal-overlay" id="profileModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">Configurar Perfil</div>
+    <div class="modal-field">
+      <label>Nome</label>
+      <input type="text" id="modalName" placeholder="Seu nome" maxlength="30"/>
+    </div>
+    <div class="modal-field">
+      <label>Cidade</label>
+      <input type="text" id="modalCity" placeholder="Sua cidade"/>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-save" id="modalSave">Salvar</button>
+      <button class="modal-cancel" id="modalCancel">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm reset -->
+<div class="modal-overlay" id="confirmModal" style="display:none">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Reiniciar álbum?</div>
+    <div class="modal-sub">Todas as figurinhas marcadas serão apagadas. Esta ação não pode ser desfeita.</div>
+    <div class="modal-btns">
+      <button class="modal-danger" id="confirmYes">Sim, apagar tudo</button>
+      <button class="modal-cancel" id="confirmNo">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
 </html>
