@@ -1,138 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-<<<<<<< cursor/album-copa-2026-1e31
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Álbum da Copa do Mundo 2026</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <main class="app">
-      <header class="app-header">
-        <h1>Álbum da Copa do Mundo 2026</h1>
-        <p>
-          Marque suas figurinhas, acompanhe o progresso e folheie o álbum página por
-          página.
-        </p>
-      </header>
-
-      <section class="seller-center" aria-label="Central do vendedor">
-        <div class="seller-header">
-          <h2>Central do vendedor</h2>
-          <p>Configure preços por categoria, seleção e figurinha individual.</p>
-        </div>
-
-        <div class="seller-cards">
-          <article class="seller-card" data-price-category="br">
-            <h3>BR</h3>
-            <p>Base para figurinhas de abertura e sedes.</p>
-            <label for="priceBrInput">Preço base (R$)</label>
-            <input id="priceBrInput" type="number" min="0" step="0.5" />
-          </article>
-
-          <article class="seller-card" data-price-category="fwc">
-            <h3>Cromos FWC</h3>
-            <p>Base para figurinhas especiais da fase final.</p>
-            <label for="priceFwcInput">Preço base (R$)</label>
-            <input id="priceFwcInput" type="number" min="0" step="0.5" />
-          </article>
-
-          <article class="seller-card" data-price-category="coca">
-            <h3>Coca-Cola</h3>
-            <p>Base para figurinhas promocionais.</p>
-            <label for="priceCocaInput">Preço base (R$)</label>
-            <input id="priceCocaInput" type="number" min="0" step="0.5" />
-          </article>
-
-          <article class="seller-card" data-price-category="outros">
-            <h3>Outros Times</h3>
-            <p>Base padrão para qualquer outra figurinha.</p>
-            <label for="priceOthersInput">Preço base (R$)</label>
-            <input id="priceOthersInput" type="number" min="0" step="0.5" />
-          </article>
-
-          <button
-            id="openIndividualPricingButton"
-            type="button"
-            class="seller-card seller-card-action"
-          >
-            <h3>Preço individual</h3>
-            <p>
-              Clique para escolher a seleção e abrir a lista de figurinhas com preço
-              unitário.
-            </p>
-            <span>Configurar agora →</span>
-          </button>
-        </div>
-
-        <div class="seller-selection-controls">
-          <label for="sellerSelectionSelect">Seleção:</label>
-          <select id="sellerSelectionSelect"></select>
-
-          <label for="selectionDefaultPriceInput">Preço padrão da seleção (R$):</label>
-          <input id="selectionDefaultPriceInput" type="number" min="0" step="0.5" />
-
-          <button id="saveSelectionDefaultButton" type="button">Salvar seleção</button>
-        </div>
-
-        <section id="individualPricingPanel" class="individual-pricing-panel">
-          <div class="individual-pricing-header">
-            <h3 id="individualPricingTitle">Preço individual por figurinha</h3>
-            <p id="individualPricingDescription">
-              Ajuste o valor de cada figurinha separadamente.
-            </p>
-          </div>
-          <div id="individualStickerList" class="individual-sticker-list"></div>
-        </section>
-      </section>
-
-      <section class="progress-panel" aria-label="Progresso geral do álbum">
-        <div class="progress-text">
-          <strong id="globalProgressLabel">0 de 0 figurinhas</strong>
-          <span id="globalProgressPercent">0%</span>
-        </div>
-        <div class="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100">
-          <div id="globalProgressFill" class="progress-fill"></div>
-        </div>
-      </section>
-
-      <section class="album-controls" aria-label="Controles do álbum">
-        <button id="previousPageButton" type="button">← Página anterior</button>
-
-        <label for="pageSelect" class="select-label">Página:</label>
-        <select id="pageSelect"></select>
-
-        <button id="nextPageButton" type="button">Próxima página →</button>
-      </section>
-
-      <section id="albumPage" class="album-page" aria-live="polite">
-        <div class="page-header">
-          <p id="pageCounter" class="page-counter">Página 1 de 1</p>
-          <h2 id="pageTitle">Carregando...</h2>
-          <p id="pageDescription"></p>
-        </div>
-
-        <div class="page-progress">
-          <span id="pageProgressLabel">0 de 0 nesta página</span>
-        </div>
-
-        <div id="stickersGrid" class="stickers-grid"></div>
-      </section>
-
-      <section class="footer-actions" aria-label="Ações extras">
-        <button id="markAllPageButton" type="button">Marcar página inteira</button>
-        <button id="unmarkAllPageButton" type="button">Desmarcar página inteira</button>
-        <button id="resetAlbumButton" type="button" class="danger">
-          Reiniciar álbum completo
-        </button>
-      </section>
-    </main>
-
-    <script src="script.js"></script>
-  </body>
-</html>
-=======
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -449,6 +316,12 @@
                 <input type="number" class="vd-price-inp" id="pricesOther" value="3.00" min="0.5" step="0.5"/>
               </div>
             </div>
+            <button class="vd-cat-card vd-cat-individual" id="openIndividualPricingBtn" type="button">
+              <div class="vd-cat-icon">🧩</div>
+              <div class="vd-cat-label">Preço individual</div>
+              <div class="vd-cat-helper">Seleção + figurinha</div>
+              <div class="vd-cat-small" id="individualCardCount">0 ajustes</div>
+            </button>
           </div>
 
           <!-- Per-team override -->
@@ -469,6 +342,23 @@
               </div>
               <div class="vd-overrides-list" id="overridesList"></div>
             </div>
+          </div>
+
+          <!-- Per-sticker individual pricing -->
+          <div class="vd-individual-section" id="individualPricingSection" style="display:none">
+            <div class="vd-individual-head">
+              <strong id="individualPricingTitle">🧩 Preço individual por figurinha</strong>
+              <span id="individualTeamCount">0 personalizados</span>
+            </div>
+            <div class="vd-individual-controls">
+              <div class="vd-ov-select-wrap">
+                <select class="vd-team-select" id="individualTeamSelect"></select>
+              </div>
+              <button class="vd-add-override-btn vd-add-ghost" id="clearIndividualTeamBtn" type="button">
+                Limpar desta seleção
+              </button>
+            </div>
+            <div class="vd-individual-list" id="individualStickersList"></div>
           </div>
         </div>
 
@@ -556,4 +446,3 @@
 <script src="script.js"></script>
 </body>
 </html>
->>>>>>> main
