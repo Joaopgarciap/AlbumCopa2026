@@ -316,6 +316,12 @@
                 <input type="number" class="vd-price-inp" id="pricesOther" value="3.00" min="0.5" step="0.5"/>
               </div>
             </div>
+            <button class="vd-cat-card vd-cat-individual" id="openIndividualPricingBtn" type="button">
+              <div class="vd-cat-icon">🧩</div>
+              <div class="vd-cat-label">Preço individual</div>
+              <div class="vd-cat-helper">Seleção + figurinha</div>
+              <div class="vd-cat-small" id="individualCardCount">0 ajustes</div>
+            </button>
           </div>
 
           <!-- Per-team override -->
@@ -336,6 +342,23 @@
               </div>
               <div class="vd-overrides-list" id="overridesList"></div>
             </div>
+          </div>
+
+          <!-- Per-sticker individual pricing -->
+          <div class="vd-individual-section" id="individualPricingSection" style="display:none">
+            <div class="vd-individual-head">
+              <strong id="individualPricingTitle">🧩 Preço individual por figurinha</strong>
+              <span id="individualTeamCount">0 personalizados</span>
+            </div>
+            <div class="vd-individual-controls">
+              <div class="vd-ov-select-wrap">
+                <select class="vd-team-select" id="individualTeamSelect"></select>
+              </div>
+              <button class="vd-add-override-btn vd-add-ghost" id="clearIndividualTeamBtn" type="button">
+                Limpar desta seleção
+              </button>
+            </div>
+            <div class="vd-individual-list" id="individualStickersList"></div>
           </div>
         </div>
 

@@ -1072,14 +1072,24 @@ html, body {
   transition: border-color .15s;
 }
 .vd-cat-card:hover { border-color: rgba(255,255,255,.18); }
+.vd-cat-card[type="button"] { cursor: pointer; text-align: center; }
 
 .vd-cat-brasil { background: linear-gradient(135deg, rgba(0,100,40,.35), rgba(0,60,20,.2)); border-color: rgba(0,156,59,.3) !important; }
 .vd-cat-fwc    { background: linear-gradient(135deg, rgba(180,130,0,.3), rgba(100,70,0,.2)); border-color: rgba(212,168,0,.3) !important; }
 .vd-cat-coca   { background: linear-gradient(135deg, rgba(180,20,20,.3), rgba(100,10,10,.2)); border-color: rgba(200,50,50,.3) !important; }
 .vd-cat-other  { background: linear-gradient(135deg, rgba(30,80,140,.3), rgba(15,40,80,.2)); border-color: rgba(52,152,219,.3) !important; }
+.vd-cat-individual {
+  background: linear-gradient(135deg, rgba(29,78,216,.35), rgba(15,23,42,.25));
+  border-color: rgba(59,130,246,.4) !important;
+}
+.vd-cat-individual.active {
+  box-shadow: 0 0 0 1px rgba(96,165,250,.6), 0 0 24px rgba(30,64,175,.25);
+}
 
 .vd-cat-icon  { font-size: 22px; }
 .vd-cat-label { font-family: var(--font-c); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: rgba(255,255,255,.65); text-align: center; }
+.vd-cat-helper { font-size: 10px; color: rgba(255,255,255,.55); }
+.vd-cat-small { font-family: var(--font-c); font-size: 10px; color: var(--gold-lt); font-weight: 700; }
 
 .vd-cat-input-wrap {
   display: flex;
@@ -1148,6 +1158,88 @@ html, body {
 .vd-ov-price { color: var(--gold-lt); }
 .vd-ov-remove { cursor: pointer; color: rgba(231,76,60,.6); font-size: 13px; line-height: 1; transition: color .12s; }
 .vd-ov-remove:hover { color: #ef9a9a; }
+
+/* Individual per sticker */
+.vd-individual-section {
+  margin-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.07);
+  padding-top: 12px;
+}
+.vd-individual-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.vd-individual-head strong {
+  font-family: var(--font-c);
+  font-size: 14px;
+  letter-spacing: .03em;
+  color: rgba(255,255,255,.72);
+}
+.vd-individual-head span {
+  font-size: 11px;
+  color: rgba(255,255,255,.55);
+}
+.vd-individual-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.vd-add-ghost {
+  border-color: rgba(148,163,184,.4);
+  background: rgba(148,163,184,.08);
+  color: rgba(226,232,240,.8);
+}
+.vd-add-ghost:hover { background: rgba(148,163,184,.18); }
+.vd-individual-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+.vd-individual-item {
+  border: 1px solid rgba(255,255,255,.09);
+  background: rgba(255,255,255,.03);
+  border-radius: 8px;
+  padding: 8px 9px;
+  display: grid;
+  gap: 5px;
+}
+.vd-individual-item-title {
+  font-family: var(--font-c);
+  font-size: 12px;
+  color: rgba(255,255,255,.78);
+  font-weight: 700;
+}
+.vd-individual-item-code {
+  font-family: var(--font-c);
+  font-size: 11px;
+  color: rgba(255,255,255,.42);
+}
+.vd-individual-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.vd-individual-input-wrap input {
+  width: 100%;
+  background: rgba(0,0,0,.28);
+  border: 1px solid rgba(255,255,255,.16);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: #fff;
+  font-family: var(--font-b);
+}
+.vd-individual-hint {
+  font-size: 10px;
+  color: rgba(255,255,255,.45);
+}
 
 /* Parser layout */
 .vd-parser-layout {

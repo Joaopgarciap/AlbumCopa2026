@@ -78,6 +78,8 @@ function pageStickerIds(page) {
 }
 
 const TOTAL = PAGES.reduce((s,p)=>s+pageStickerIds(p).length,0);
+const ALL_STICKER_IDS = new Set(PAGES.flatMap(pageStickerIds));
+const DEFAULT_TEAM_CODE = TEAMS.some(t => t.code === 'BRA') ? 'BRA' : (TEAMS[0]?.code || '');
 
 /* ── State ──────────────────────────────── */
 let obtained    = new Set();
@@ -95,6 +97,11 @@ function save() {
       obtained: [...obtained],
       duplicates: [...duplicates],
       profile,
+      categoryPrices,
+      teamPriceOverrides,
+      stickerPriceOverrides,
+      individualPricingOpen,
+      selectedIndividualTeam,
     }));
   } catch(e){}
 }
@@ -107,7 +114,43 @@ function load() {
     if(Array.isArray(d.obtained))   obtained   = new Set(d.obtained);
     if(Array.isArray(d.duplicates)) duplicates = new Set(d.duplicates);
     if(d.profile) profile = d.profile;
+    if(d.categoryPrices && typeof d.categoryPrices === 'object') {
+      categoryPrices = {
+        brasil: toValidPrice(d.categoryPrices.brasil, categoryPrices.brasil),
+        fwc: toValidPrice(d.categoryPrices.fwc, categoryPrices.fwc),
+        coca: toValidPrice(d.categoryPrices.coca, categoryPrices.coca),
+        other: toValidPrice(d.categoryPrices.other, categoryPrices.other),
+      };
+    }
+    if(d.teamPriceOverrides && typeof d.teamPriceOverrides === 'object') {
+      const parsed = {};
+      Object.entries(d.teamPriceOverrides).forEach(([code, value]) => {
+        const teamExists = TEAMS.some(team => team.code === code);
+        if(!teamExists) return;
+        parsed[code] = toValidPrice(value, null);
+      });
+      teamPriceOverrides = parsed;
+    }
+    if(d.stickerPriceOverrides && typeof d.stickerPriceOverrides === 'object') {
+      const parsed = {};
+      Object.entries(d.stickerPriceOverrides).forEach(([id, value]) => {
+        const validSticker = /^[A-Z]{3}\d{2}$/.test(id);
+        if(!validSticker) return;
+        parsed[id] = toValidPrice(value, null);
+      });
+      stickerPriceOverrides = parsed;
+    }
+    individualPricingOpen = Boolean(d.individualPricingOpen);
+    if(typeof d.selectedIndividualTeam === 'string') {
+      selectedIndividualTeam = d.selectedIndividualTeam;
+    }
   } catch(e){}
+}
+
+function toValidPrice(value, fallback) {
+  const n = Number(value);
+  if(!Number.isFinite(n) || n < 0) return fallback;
+  return Math.round(n * 100) / 100;
 }
 
 /* ── Flag helper ─────────────────────────── */
@@ -717,6 +760,9 @@ function bindEvents() {
 /* ── Price state ─────────────────────────── */
 let categoryPrices = { brasil:8, fwc:12, coca:5, other:3 };
 let teamPriceOverrides = {}; // code → price
+let stickerPriceOverrides = {}; // sticker id → price
+let individualPricingOpen = false;
+let selectedIndividualTeam = 'BRA';
 
 function getStickerPrice(id) {
   if(id.startsWith('FWC')) return categoryPrices.fwc;
@@ -725,6 +771,11 @@ function getStickerPrice(id) {
   if(teamPriceOverrides[code] !== undefined) return teamPriceOverrides[code];
   if(code === 'BRA') return categoryPrices.brasil;
   return categoryPrices.other;
+}
+
+function getEffectiveStickerPrice(id) {
+  if(stickerPriceOverrides[id] !== undefined) return stickerPriceOverrides[id];
+  return getStickerPrice(id);
 }
 
 function getStickerCat(id) {
@@ -883,17 +934,31 @@ function parseItem(raw, found) {
 
 /* ── Render vendedor section ─────────────── */
 function initVendedor() {
-  // Populate team select
+  // Populate team selects
   const sel = document.getElementById('overrideTeamSelect');
+  const individualSel = document.getElementById('individualTeamSelect');
+  sel.innerHTML = '';
+  individualSel.innerHTML = '';
   TEAMS.forEach(t => {
     const opt = document.createElement('option');
     opt.value = t.code;
     opt.textContent = `${t.name} (${t.code})`;
     sel.appendChild(opt);
+
+    const optIndividual = document.createElement('option');
+    optIndividual.value = t.code;
+    optIndividual.textContent = `${t.name} (${t.code})`;
+    individualSel.appendChild(optIndividual);
   });
 
+  const hasSelectedTeam = TEAMS.some(team => team.code === selectedIndividualTeam);
+  if(!hasSelectedTeam) selectedIndividualTeam = 'BRA';
+  individualSel.value = selectedIndividualTeam;
+
   // Price summary
+  renderOverrides();
   updatePriceSummary();
+  renderIndividualPricingState();
 
   // Override toggle
   document.getElementById('overrideToggle').addEventListener('click', () => {
@@ -909,17 +974,42 @@ function initVendedor() {
     const code = document.getElementById('overrideTeamSelect').value;
     const price = parseFloat(document.getElementById('overridePrice').value);
     if(!code || isNaN(price)) return;
-    teamPriceOverrides[code] = price;
+    teamPriceOverrides[code] = toValidPrice(price, 0);
     renderOverrides();
     updatePriceSummary();
+    if(individualPricingOpen) renderIndividualPricingList();
+    save();
   });
 
   // Category price changes
   ['Brasil','Fwc','Coca','Other'].forEach(cat => {
     document.getElementById(`prices${cat}`).addEventListener('change', e => {
-      categoryPrices[cat.toLowerCase()] = parseFloat(e.target.value)||0;
+      categoryPrices[cat.toLowerCase()] = toValidPrice(parseFloat(e.target.value), 0);
       updatePriceSummary();
+      if(individualPricingOpen) renderIndividualPricingList();
+      save();
     });
+  });
+
+  // Individual pricing panel
+  document.getElementById('openIndividualPricingBtn').addEventListener('click', () => {
+    individualPricingOpen = !individualPricingOpen;
+    renderIndividualPricingState();
+    save();
+  });
+
+  individualSel.addEventListener('change', e => {
+    selectedIndividualTeam = e.target.value;
+    renderIndividualPricingList();
+    save();
+  });
+
+  document.getElementById('clearIndividualTeamBtn').addEventListener('click', () => {
+    const ids = buildTeamStickerIds(selectedIndividualTeam);
+    ids.forEach(id => delete stickerPriceOverrides[id]);
+    renderIndividualPricingList();
+    updatePriceSummary();
+    save();
   });
 
   // Parse button
@@ -944,13 +1034,19 @@ function initVendedor() {
 
 function updatePriceSummary() {
   const overCount = Object.keys(teamPriceOverrides).length;
+  const individualCount = Object.keys(stickerPriceOverrides).length;
   document.getElementById('overrideCount').textContent = overCount ? `${overCount} override(s)` : '';
+  const individualCardCount = document.getElementById('individualCardCount');
+  if(individualCardCount) {
+    individualCardCount.textContent = `${individualCount} ajustes`;
+  }
 
   document.getElementById('vdPriceSummary').innerHTML = `
     <div class="vd-ps-row"><span>🇧🇷 Brasil (por fig.)</span><span>R$ ${categoryPrices.brasil.toFixed(2)}</span></div>
     <div class="vd-ps-row"><span>⭐ Cromos FWC (por fig.)</span><span>R$ ${categoryPrices.fwc.toFixed(2)}</span></div>
     <div class="vd-ps-row"><span>🥤 Coca-Cola (por fig.)</span><span>R$ ${categoryPrices.coca.toFixed(2)}</span></div>
     <div class="vd-ps-row"><span>🌍 Outros Times (por fig.)</span><span>R$ ${categoryPrices.other.toFixed(2)}</span></div>
+    <div class="vd-ps-row"><span>🧩 Preços individuais</span><span>${individualCount}</span></div>
     ${overCount ? `<div class="vd-ps-row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.08)"><span>⚙️ Overrides ativos</span><span>${overCount} times</span></div>` : ''}
   `;
 }
@@ -967,12 +1063,95 @@ function renderOverrides() {
     const pr = document.createElement('span'); pr.className = 'vd-ov-price'; pr.textContent = `R$ ${price.toFixed(2)}`;
     const rm = document.createElement('span'); rm.className = 'vd-ov-remove'; rm.textContent = '×';
     rm.title = 'Remover override';
-    rm.addEventListener('click', () => { delete teamPriceOverrides[code]; renderOverrides(); updatePriceSummary(); });
+    rm.addEventListener('click', () => {
+      delete teamPriceOverrides[code];
+      renderOverrides();
+      updatePriceSummary();
+      if(individualPricingOpen) renderIndividualPricingList();
+      save();
+    });
     chip.append(f, nm, pr, rm);
     list.appendChild(chip);
   });
   document.getElementById('overrideCount').textContent =
     Object.keys(teamPriceOverrides).length ? `${Object.keys(teamPriceOverrides).length} override(s)` : '';
+}
+
+function buildTeamStickerIds(teamCode) {
+  return Array.from({ length: 20 }, (_, i) => `${teamCode}${String(i + 1).padStart(2, '0')}`);
+}
+
+function renderIndividualPricingState() {
+  const section = document.getElementById('individualPricingSection');
+  const btn = document.getElementById('openIndividualPricingBtn');
+  section.style.display = individualPricingOpen ? 'block' : 'none';
+  btn.classList.toggle('active', individualPricingOpen);
+  if(individualPricingOpen) renderIndividualPricingList();
+}
+
+function renderIndividualPricingList() {
+  const list = document.getElementById('individualStickersList');
+  const team = TEAMS.find(t => t.code === selectedIndividualTeam);
+  const title = document.getElementById('individualPricingTitle');
+  const teamCount = document.getElementById('individualTeamCount');
+  list.innerHTML = '';
+  if(!team) return;
+
+  title.textContent = `🧩 Preço individual — ${team.name}`;
+  const ids = buildTeamStickerIds(team.code);
+  const customInTeam = ids.filter(id => stickerPriceOverrides[id] !== undefined).length;
+  teamCount.textContent = `${customInTeam} personalizados`;
+
+  ids.forEach(id => {
+    const num = parseInt(id.slice(-2), 10);
+    const card = document.createElement('div');
+    card.className = 'vd-individual-item';
+
+    const t = document.createElement('div');
+    t.className = 'vd-individual-item-title';
+    t.textContent = num === 1 ? 'Brasão' : (num === 13 ? 'Foto da equipe' : `Jogador ${num}`);
+
+    const c = document.createElement('div');
+    c.className = 'vd-individual-item-code';
+    c.textContent = id;
+
+    const wrap = document.createElement('div');
+    wrap.className = 'vd-individual-input-wrap';
+    const currency = document.createElement('span');
+    currency.className = 'vd-currency';
+    currency.textContent = 'R$';
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.min = '0';
+    input.step = '0.5';
+    input.value = stickerPriceOverrides[id] !== undefined ? stickerPriceOverrides[id].toFixed(2) : '';
+    input.placeholder = getStickerPrice(id).toFixed(2);
+    wrap.append(currency, input);
+
+    const hint = document.createElement('div');
+    hint.className = 'vd-individual-hint';
+    hint.textContent = `Base atual: R$ ${getStickerPrice(id).toFixed(2)}`;
+
+    input.addEventListener('change', () => {
+      const raw = input.value.trim();
+      if(raw === '') {
+        delete stickerPriceOverrides[id];
+      } else {
+        const parsed = toValidPrice(parseFloat(raw), null);
+        if(parsed === null) {
+          input.value = stickerPriceOverrides[id] !== undefined ? stickerPriceOverrides[id].toFixed(2) : '';
+          return;
+        }
+        stickerPriceOverrides[id] = parsed;
+      }
+      renderIndividualPricingList();
+      updatePriceSummary();
+      save();
+    });
+
+    card.append(t, c, wrap, hint);
+    list.appendChild(card);
+  });
 }
 
 function renderParserResult(found, unknown) {
@@ -994,7 +1173,7 @@ function renderParserResult(found, unknown) {
 
   deduped.forEach(item => {
     const t = TEAMS.find(t => t.code === item.code);
-    const price = getStickerPrice(item.id);
+    const price = getEffectiveStickerPrice(item.id);
     const cat   = getStickerCat(item.id);
     const catLabels = { br:'Brasil', fwc:'FWC ⭐', coca:'Coca-Cola', other:'Outros' };
     total += price;
@@ -1039,7 +1218,7 @@ function renderParserResult(found, unknown) {
   lines.push('✅ *Figurinhas disponíveis:*');
 
   deduped.forEach(item => {
-    const price = getStickerPrice(item.id);
+    const price = getEffectiveStickerPrice(item.id);
     const lbl   = getStickerLabel(item.id);
     const t     = TEAMS.find(t => t.code === item.code);
     const tName = t ? t.name : item.code;
