@@ -710,12 +710,365 @@ function bindEvents() {
   });
 }
 
+/* ═══════════════════════════════════════════
+   CENTRAL DO VENDEDOR
+═══════════════════════════════════════════ */
+
+/* ── Price state ─────────────────────────── */
+let categoryPrices = { brasil:8, fwc:12, coca:5, other:3 };
+let teamPriceOverrides = {}; // code → price
+
+function getStickerPrice(id) {
+  if(id.startsWith('FWC')) return categoryPrices.fwc;
+  if(id.startsWith('CC'))  return categoryPrices.coca;
+  const code = id.replace(/\d+$/, '');
+  if(teamPriceOverrides[code] !== undefined) return teamPriceOverrides[code];
+  if(code === 'BRA') return categoryPrices.brasil;
+  return categoryPrices.other;
+}
+
+function getStickerCat(id) {
+  if(id.startsWith('FWC')) return 'fwc';
+  if(id.startsWith('CC'))  return 'coca';
+  const code = id.replace(/\d+$/, '');
+  if(code === 'BRA') return 'br';
+  return 'other';
+}
+
+function getStickerLabel(id) {
+  if(id.startsWith('FWC')) return `Cromo Especial ${id}`;
+  if(id.startsWith('CC'))  return `Coca-Cola ${id.replace('CC','')}`;
+  const code = id.replace(/\d+$/, '');
+  const num  = parseInt(id.replace(/^\D+/,''));
+  if(num === 1)  return 'Brasão';
+  if(num === 13) return 'Foto da Equipe';
+  return `Jogador ${num}`;
+}
+
+/* ── Name → Code mapping ─────────────────── */
+const NAME_TO_CODE = (()=>{
+  const m = {};
+  // Exact 3-letter codes
+  const codes = ['MEX','RSA','KOR','CZE','CAN','BIH','QAT','SUI','BRA','MAR','HAI','SCO',
+    'USA','PAR','AUS','TUR','GER','CUW','CIV','ECU','NED','JPN','SWE','TUN','BEL','EGY',
+    'IRN','NZL','ESP','CPV','KSA','URU','FRA','SEN','NOR','IRQ','ARG','ALG','AUT','JOR',
+    'POR','COD','UZB','COL','ENG','CRO','GHA','PAN'];
+  codes.forEach(c => m[c.toLowerCase()] = c);
+
+  // Portuguese / common names (no accents)
+  const aliases = {
+    'mexico':'MEX','africa do sul':'RSA','africa sul':'RSA','africa':'RSA',
+    'coreia do sul':'KOR','coreia':'KOR','korea':'KOR',
+    'tchequia':'CZE','chequia':'CZE','republica tcheca':'CZE','tcheca':'CZE','czech':'CZE',
+    'canada':'CAN',
+    'bosnia':'BIH','bosnia e herzegovina':'BIH','bosnia herzegovina':'BIH',
+    'catar':'QAT','qatar':'QAT',
+    'suica':'SUI','suissa':'SUI','switzerland':'SUI',
+    'brasil':'BRA','brazil':'BRA',
+    'marrocos':'MAR','morocco':'MAR',
+    'haiti':'HAI',
+    'escocia':'SCO','escoccia':'SCO','scotland':'SCO',
+    'estados unidos':'USA','eua':'USA','united states':'USA',
+    'paraguai':'PAR','paraguay':'PAR',
+    'australia':'AUS',
+    'turquia':'TUR','turkey':'TUR',
+    'alemanha':'GER','germany':'GER','alemanna':'GER',
+    'curacao':'CUW','curazao':'CUW',
+    'costa do marfim':'CIV','marfim':'CIV','ivory coast':'CIV','costa marfim':'CIV',
+    'equador':'ECU','ecuador':'ECU',
+    'paises baixos':'NED','holanda':'NED','netherlands':'NED','holand':'NED','holland':'NED',
+    'japao':'JPN','japan':'JPN',
+    'suecia':'SWE','sweden':'SWE',
+    'tunisia':'TUN','tunizia':'TUN',
+    'belgica':'BEL','belgium':'BEL',
+    'egito':'EGY','egypt':'EGY',
+    'ira':'IRN','iran':'IRN',
+    'nova zelandia':'NZL','new zealand':'NZL','zelandia':'NZL','nova zeland':'NZL',
+    'espanha':'ESP','spain':'ESP',
+    'cabo verde':'CPV','caboverde':'CPV',
+    'arabia saudita':'KSA','arabia':'KSA','saudi':'KSA','saudi arabia':'KSA','arabia saudi':'KSA',
+    'uruguai':'URU','uruguay':'URU',
+    'franca':'FRA','france':'FRA','franca do norte':'FRA',
+    'senegal':'SEN',
+    'noruega':'NOR','norway':'NOR',
+    'iraque':'IRQ','iraq':'IRQ',
+    'argentina':'ARG',
+    'argelia':'ALG','algeria':'ALG',
+    'austria':'AUT',
+    'jordania':'JOR','jordan':'JOR',
+    'portugal':'POR',
+    'rd congo':'COD','congo':'COD','rdc':'COD','republica democratica congo':'COD',
+    'uzbequistao':'UZB','uzbekistao':'UZB','uzbekistan':'UZB','uzbequistan':'UZB',
+    'colombia':'COL',
+    'inglaterra':'ENG','england':'ENG',
+    'croacia':'CRO','croatia':'CRO',
+    'gana':'GHA','ghana':'GHA',
+    'panama':'PAN',
+  };
+  Object.assign(m, aliases);
+  return m;
+})();
+
+/* Normalize string: lowercase + remove accents */
+function norm(s) {
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+/* ── Text parser ─────────────────────────── */
+function parseCustomerMessage(text) {
+  // Step 1: normalize + split into candidate items
+  const split = norm(text)
+    .replace(/--+/g, '|')
+    .replace(/[;,]/g, '|')
+    .replace(/\s*\|\s*/g, '|')
+    .split('|')
+    .map(s => s.trim())
+    .filter(Boolean);
+
+  const found   = []; // { id, code, num, raw }
+  const unknown = []; // raw strings that couldn't be parsed
+
+  for(let chunk of split) {
+    // A chunk may contain multiple items separated by spaces if they run together
+    // e.g. "bra1 bra2 bra3" or "bra1" or "brasil 12"
+    // Try to parse each chunk as one item first (handles "brasil 12", "bra 5")
+    if(parseItem(chunk, found)) continue;
+
+    // If failed, maybe multiple items stuck together
+    // Try splitting on spaces and combine attempts
+    const words = chunk.split(/\s+/);
+    if(words.length > 1) {
+      // Try each single word (handles "bra1")
+      let consumed = 0;
+      while(consumed < words.length) {
+        let parsed = false;
+        // Try combining 1,2,3 words
+        for(let len = Math.min(3, words.length - consumed); len >= 1; len--) {
+          const sub = words.slice(consumed, consumed + len).join(' ');
+          if(parseItem(sub, found)) { consumed += len; parsed = true; break; }
+        }
+        if(!parsed) { unknown.push(words[consumed]); consumed++; }
+      }
+    } else {
+      unknown.push(chunk);
+    }
+  }
+
+  return { found, unknown };
+}
+
+function parseItem(raw, found) {
+  raw = raw.trim();
+  if(!raw) return false;
+
+  // Pattern: (text)(optional space)(1 or 2 digit number)
+  const m = raw.match(/^(.+?)\s*(\d{1,2})$/);
+  if(!m) return false;
+
+  const namePart = m[1].trim().replace(/\s+/g,' ');
+  const num = parseInt(m[2]);
+
+  // Try direct lookup
+  let code = NAME_TO_CODE[namePart];
+  // Also try without internal spaces
+  if(!code) code = NAME_TO_CODE[namePart.replace(/\s/g,'')];
+
+  if(!code) return false;
+  if(num < 1 || num > 20) return false;
+
+  const id = code + String(num).padStart(2,'0');
+  found.push({ id, code, num, raw });
+  return true;
+}
+
+/* ── Render vendedor section ─────────────── */
+function initVendedor() {
+  // Populate team select
+  const sel = document.getElementById('overrideTeamSelect');
+  TEAMS.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.code;
+    opt.textContent = `${t.name} (${t.code})`;
+    sel.appendChild(opt);
+  });
+
+  // Price summary
+  updatePriceSummary();
+
+  // Override toggle
+  document.getElementById('overrideToggle').addEventListener('click', () => {
+    const body = document.getElementById('overrideBody');
+    const chev = document.querySelector('.vd-toggle-chevron');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    chev.classList.toggle('open', !open);
+  });
+
+  // Add override
+  document.getElementById('addOverrideBtn').addEventListener('click', () => {
+    const code = document.getElementById('overrideTeamSelect').value;
+    const price = parseFloat(document.getElementById('overridePrice').value);
+    if(!code || isNaN(price)) return;
+    teamPriceOverrides[code] = price;
+    renderOverrides();
+    updatePriceSummary();
+  });
+
+  // Category price changes
+  ['Brasil','Fwc','Coca','Other'].forEach(cat => {
+    document.getElementById(`prices${cat}`).addEventListener('change', e => {
+      categoryPrices[cat.toLowerCase()] = parseFloat(e.target.value)||0;
+      updatePriceSummary();
+    });
+  });
+
+  // Parse button
+  document.getElementById('parseBtn').addEventListener('click', () => {
+    const txt = document.getElementById('customerMsg').value.trim();
+    if(!txt) return;
+    const { found, unknown } = parseCustomerMessage(txt);
+    renderParserResult(found, unknown);
+  });
+
+  // Copy button
+  document.getElementById('vdCopyBtn').addEventListener('click', () => {
+    const txt = document.getElementById('vdResponseText').textContent;
+    navigator.clipboard.writeText(txt).then(() => {
+      const btn = document.getElementById('vdCopyBtn');
+      btn.textContent = '✅ Copiado!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = '📋 Copiar'; btn.classList.remove('copied'); }, 2000);
+    });
+  });
+}
+
+function updatePriceSummary() {
+  const overCount = Object.keys(teamPriceOverrides).length;
+  document.getElementById('overrideCount').textContent = overCount ? `${overCount} override(s)` : '';
+
+  document.getElementById('vdPriceSummary').innerHTML = `
+    <div class="vd-ps-row"><span>🇧🇷 Brasil (por fig.)</span><span>R$ ${categoryPrices.brasil.toFixed(2)}</span></div>
+    <div class="vd-ps-row"><span>⭐ Cromos FWC (por fig.)</span><span>R$ ${categoryPrices.fwc.toFixed(2)}</span></div>
+    <div class="vd-ps-row"><span>🥤 Coca-Cola (por fig.)</span><span>R$ ${categoryPrices.coca.toFixed(2)}</span></div>
+    <div class="vd-ps-row"><span>🌍 Outros Times (por fig.)</span><span>R$ ${categoryPrices.other.toFixed(2)}</span></div>
+    ${overCount ? `<div class="vd-ps-row" style="margin-top:4px;padding-top:4px;border-top:1px solid rgba(255,255,255,0.08)"><span>⚙️ Overrides ativos</span><span>${overCount} times</span></div>` : ''}
+  `;
+}
+
+function renderOverrides() {
+  const list = document.getElementById('overridesList');
+  list.innerHTML = '';
+  Object.entries(teamPriceOverrides).forEach(([code, price]) => {
+    const t = TEAMS.find(t => t.code === code);
+    if(!t) return;
+    const chip = document.createElement('div'); chip.className = 'vd-override-chip';
+    const f = mkFlag(t.fi, 'fi vd-ov-flag');
+    const nm = document.createElement('span'); nm.className = 'vd-ov-name'; nm.textContent = t.name;
+    const pr = document.createElement('span'); pr.className = 'vd-ov-price'; pr.textContent = `R$ ${price.toFixed(2)}`;
+    const rm = document.createElement('span'); rm.className = 'vd-ov-remove'; rm.textContent = '×';
+    rm.title = 'Remover override';
+    rm.addEventListener('click', () => { delete teamPriceOverrides[code]; renderOverrides(); updatePriceSummary(); });
+    chip.append(f, nm, pr, rm);
+    list.appendChild(chip);
+  });
+  document.getElementById('overrideCount').textContent =
+    Object.keys(teamPriceOverrides).length ? `${Object.keys(teamPriceOverrides).length} override(s)` : '';
+}
+
+function renderParserResult(found, unknown) {
+  const output = document.getElementById('vdOutput');
+  output.style.display = 'flex';
+
+  // Dedupe
+  const seen = new Set();
+  const deduped = [];
+  const dupes = [];
+  found.forEach(item => {
+    if(seen.has(item.id)) { dupes.push(item); } else { seen.add(item.id); deduped.push(item); }
+  });
+
+  // Items list
+  const listEl = document.getElementById('vdItemsList');
+  listEl.innerHTML = '';
+  let total = 0;
+
+  deduped.forEach(item => {
+    const t = TEAMS.find(t => t.code === item.code);
+    const price = getStickerPrice(item.id);
+    const cat   = getStickerCat(item.id);
+    const catLabels = { br:'Brasil', fwc:'FWC ⭐', coca:'Coca-Cola', other:'Outros' };
+    total += price;
+
+    const row = document.createElement('div'); row.className = 'vd-item-row';
+
+    const flagEl = document.createElement('span'); flagEl.className = 'vd-item-flag';
+    if(t) flagEl.appendChild(mkFlag(t.fi, 'fi'+(cat==='fwc'?' vd-item-fwc':'')));
+    else   flagEl.textContent = '⭐';
+    flagEl.querySelector('.fi') && (flagEl.querySelector('.fi').style.cssText = 'width:20px;height:15px;border-radius:2px;');
+
+    const idEl = document.createElement('div'); idEl.className = 'vd-item-id'; idEl.textContent = item.id;
+    const lblEl = document.createElement('div'); lblEl.className = 'vd-item-label'; lblEl.textContent = getStickerLabel(item.id);
+    const catEl = document.createElement('div'); catEl.className = `vd-item-cat vd-item-cat-${cat}`; catEl.textContent = catLabels[cat];
+    const prEl  = document.createElement('div'); prEl.className = 'vd-item-price'; prEl.textContent = `R$ ${price.toFixed(2)}`;
+
+    row.append(flagEl, idEl, lblEl, catEl, prEl);
+    listEl.appendChild(row);
+  });
+
+  // Total
+  document.getElementById('vdTotalValue').textContent = `R$ ${total.toFixed(2).replace('.',',')}`;
+
+  // Unknown
+  const unkBox  = document.getElementById('vdUnknownBox');
+  const unkList = document.getElementById('vdUnknownList');
+  unkList.innerHTML = '';
+
+  const allUnknown = [...unknown, ...dupes.map(d => `${d.raw} (repetida, ignorada)`)];
+  if(allUnknown.length) {
+    unkBox.style.display = 'block';
+    allUnknown.forEach(u => {
+      const c = document.createElement('div'); c.className = 'vd-unk-chip'; c.textContent = u;
+      unkList.appendChild(c);
+    });
+  } else {
+    unkBox.style.display = 'none';
+  }
+
+  // Build response text
+  let lines = ['Olá! Segue o orçamento do seu pedido 😊\n'];
+  lines.push('✅ *Figurinhas disponíveis:*');
+
+  deduped.forEach(item => {
+    const price = getStickerPrice(item.id);
+    const lbl   = getStickerLabel(item.id);
+    const t     = TEAMS.find(t => t.code === item.code);
+    const tName = t ? t.name : item.code;
+    lines.push(`• ${item.id} — ${tName} (${lbl}) ........... R$ ${price.toFixed(2).replace('.',',')}`);
+  });
+
+  lines.push('');
+  lines.push(`💰 *TOTAL: R$ ${total.toFixed(2).replace('.',',')}*`);
+  lines.push(`📦 Total de figurinhas: ${deduped.length}`);
+
+  if(allUnknown.filter(u => !u.includes('repetida')).length) {
+    lines.push('');
+    lines.push('⚠️ *Não encontrei no meu álbum:*');
+    allUnknown.filter(u => !u.includes('repetida')).forEach(u => lines.push(`• "${u}" — não identificada`));
+  }
+
+  lines.push('');
+  lines.push('Me confirme o pedido e combinamos a entrega! 📬');
+
+  document.getElementById('vdResponseText').textContent = lines.join('\n');
+}
+
 /* ─── Init ───────────────────────────────── */
 load();
 updateProfileUI();
 renderAlbum();
 updateBadges();
 bindEvents();
+initVendedor();
 
 // Expose for inline onclick
 window.switchSection = switchSection;

@@ -45,6 +45,11 @@
         <span class="snav-label">Inner Circle</span>
         <span class="snav-badge snav-badge-red" id="navCircleBadge">●</span>
       </button>
+      <button class="snav-btn" data-section="vendedor">
+        <span class="snav-icon">🏪</span>
+        <span class="snav-label">Central do Vendedor</span>
+        <span class="snav-badge snav-badge-green" id="navVendedorBadge">R$</span>
+      </button>
     </nav>
 
     <div class="sidebar-profile" id="sidebarProfile">
@@ -259,6 +264,122 @@
             </div>
             <input type="range" class="radius-slider" id="radiusSlider" min="1" max="50" value="10"/>
             <div class="icn-list" id="icNearbyList"></div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── SECTION: CENTRAL DO VENDEDOR ── -->
+    <section class="section" id="sectionVendedor">
+      <div class="content-section">
+
+        <div class="cs-header">
+          <h2 class="cs-title">🏪 Central do Vendedor</h2>
+          <p class="cs-sub">Configure seus preços e calcule orçamentos instantaneamente</p>
+        </div>
+
+        <!-- PRICE CONFIG -->
+        <div class="vd-price-config">
+          <div class="vd-pc-title">💲 Tabela de Preços</div>
+
+          <div class="vd-categories">
+            <div class="vd-cat-card vd-cat-brasil">
+              <div class="vd-cat-icon">🇧🇷</div>
+              <div class="vd-cat-label">Brasil</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesBrasil" value="8.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-fwc">
+              <div class="vd-cat-icon">⭐</div>
+              <div class="vd-cat-label">Cromos FWC</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesFwc" value="12.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-coca">
+              <div class="vd-cat-icon">🥤</div>
+              <div class="vd-cat-label">Coca-Cola</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesCoca" value="5.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+            <div class="vd-cat-card vd-cat-other">
+              <div class="vd-cat-icon">🌍</div>
+              <div class="vd-cat-label">Outros Times</div>
+              <div class="vd-cat-input-wrap">
+                <span class="vd-currency">R$</span>
+                <input type="number" class="vd-price-inp" id="pricesOther" value="3.00" min="0.5" step="0.5"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- Per-team override -->
+          <div class="vd-override-section">
+            <button class="vd-override-toggle" id="overrideToggle">
+              ⚙️ Preço personalizado por seleção <span id="overrideCount"></span> <span class="vd-toggle-chevron">▼</span>
+            </button>
+            <div class="vd-override-body" id="overrideBody" style="display:none">
+              <div class="vd-override-add">
+                <div class="vd-ov-select-wrap">
+                  <select class="vd-team-select" id="overrideTeamSelect"></select>
+                </div>
+                <div class="vd-cat-input-wrap">
+                  <span class="vd-currency">R$</span>
+                  <input type="number" class="vd-price-inp" id="overridePrice" value="5.00" min="0.5" step="0.5" style="width:65px"/>
+                </div>
+                <button class="vd-add-override-btn" id="addOverrideBtn">+ Adicionar</button>
+              </div>
+              <div class="vd-overrides-list" id="overridesList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PARSER -->
+        <div class="vd-parser-layout">
+
+          <!-- INPUT -->
+          <div class="vd-parser-input-col">
+            <div class="vd-panel-title">📩 Mensagem do Cliente</div>
+            <textarea class="vd-textarea" id="customerMsg" placeholder="Cole aqui a mensagem do cliente...&#10;&#10;Exemplo:&#10;Bom dia! Quero as BRA1, BRA2; ARG 5. BRASIL 12, Portugal 10 e ESP4"></textarea>
+            <button class="vd-parse-btn" id="parseBtn">
+              <span class="vd-parse-icon">⚡</span>
+              Calcular Orçamento
+            </button>
+            <div class="vd-price-summary" id="vdPriceSummary"></div>
+          </div>
+
+          <!-- OUTPUT -->
+          <div class="vd-parser-output-col" id="vdOutput" style="display:none">
+
+            <!-- Itemized -->
+            <div class="vd-panel-title">📋 Itens do Pedido</div>
+            <div class="vd-items-list" id="vdItemsList"></div>
+
+            <div class="vd-total-bar" id="vdTotalBar">
+              <span class="vd-total-label">TOTAL DO PEDIDO</span>
+              <span class="vd-total-value" id="vdTotalValue">R$ 0,00</span>
+            </div>
+
+            <!-- Unknown -->
+            <div class="vd-unknown-box" id="vdUnknownBox" style="display:none">
+              <div class="vd-unknown-title">⚠️ Não identificadas</div>
+              <div class="vd-unknown-list" id="vdUnknownList"></div>
+            </div>
+
+            <!-- Ready response -->
+            <div class="vd-response-panel">
+              <div class="vd-response-header">
+                <span class="vd-panel-title">💬 Resposta Pronta para Enviar</span>
+                <button class="vd-copy-btn" id="vdCopyBtn">📋 Copiar</button>
+              </div>
+              <div class="vd-response-text" id="vdResponseText"></div>
+            </div>
+
           </div>
         </div>
 
