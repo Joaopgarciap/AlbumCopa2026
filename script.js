@@ -6,54 +6,54 @@ const SK = 'copa26-album-v5';
 
 /* ── Teams ──────────────────────────────── */
 const TEAMS = [
-  { code:'MEX', name:'México',          grp:'A', flag:'🇲🇽', col:'#006847' },
-  { code:'RSA', name:'África do Sul',   grp:'A', flag:'🇿🇦', col:'#007749' },
-  { code:'KOR', name:'Coreia do Sul',   grp:'A', flag:'🇰🇷', col:'#C60C30' },
-  { code:'CZE', name:'Tchéquia',        grp:'A', flag:'🇨🇿', col:'#B0252A' },
-  { code:'CAN', name:'Canadá',          grp:'B', flag:'🇨🇦', col:'#CC0000' },
-  { code:'BIH', name:'Bósnia e Herz.',  grp:'B', flag:'🇧🇦', col:'#002395' },
-  { code:'QAT', name:'Catar',           grp:'B', flag:'🇶🇦', col:'#8D1B3D' },
-  { code:'SUI', name:'Suíça',           grp:'B', flag:'🇨🇭', col:'#C8242C' },
-  { code:'BRA', name:'Brasil',          grp:'C', flag:'🇧🇷', col:'#009C3B' },
-  { code:'MAR', name:'Marrocos',        grp:'C', flag:'🇲🇦', col:'#C1272D' },
-  { code:'HAI', name:'Haiti',           grp:'C', flag:'🇭🇹', col:'#00209F' },
-  { code:'SCO', name:'Escócia',         grp:'C', flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿', col:'#003DA5' },
-  { code:'USA', name:'EUA',             grp:'D', flag:'🇺🇸', col:'#1B3A6B' },
-  { code:'PAR', name:'Paraguai',        grp:'D', flag:'🇵🇾', col:'#C8242C' },
-  { code:'AUS', name:'Austrália',       grp:'D', flag:'🇦🇺', col:'#003580' },
-  { code:'TUR', name:'Turquia',         grp:'D', flag:'🇹🇷', col:'#E30A17' },
-  { code:'GER', name:'Alemanha',        grp:'E', flag:'🇩🇪', col:'#2B2B2B' },
-  { code:'CUW', name:'Curaçao',         grp:'E', flag:'🇨🇼', col:'#003DA5' },
-  { code:'CIV', name:'Costa do Marfim', grp:'E', flag:'🇨🇮', col:'#D07000' },
-  { code:'ECU', name:'Equador',         grp:'E', flag:'🇪🇨', col:'#0038A8' },
-  { code:'NED', name:'Países Baixos',   grp:'F', flag:'🇳🇱', col:'#AE1C28' },
-  { code:'JPN', name:'Japão',           grp:'F', flag:'🇯🇵', col:'#BC002D' },
-  { code:'SWE', name:'Suécia',          grp:'F', flag:'🇸🇪', col:'#006AA7' },
-  { code:'TUN', name:'Tunísia',         grp:'F', flag:'🇹🇳', col:'#C8010E' },
-  { code:'BEL', name:'Bélgica',         grp:'G', flag:'🇧🇪', col:'#2B2B2B' },
-  { code:'EGY', name:'Egito',           grp:'G', flag:'🇪🇬', col:'#CE1126' },
-  { code:'IRN', name:'Irã',             grp:'G', flag:'🇮🇷', col:'#239F40' },
-  { code:'NZL', name:'Nova Zelândia',   grp:'G', flag:'🇳🇿', col:'#00247D' },
-  { code:'ESP', name:'Espanha',         grp:'H', flag:'🇪🇸', col:'#AA151B' },
-  { code:'CPV', name:'Cabo Verde',      grp:'H', flag:'🇨🇻', col:'#003893' },
-  { code:'KSA', name:'Arábia Saudita',  grp:'H', flag:'🇸🇦', col:'#006C35' },
-  { code:'URU', name:'Uruguai',         grp:'H', flag:'🇺🇾', col:'#4A8FC0' },
-  { code:'FRA', name:'França',          grp:'I', flag:'🇫🇷', col:'#002395' },
-  { code:'SEN', name:'Senegal',         grp:'I', flag:'🇸🇳', col:'#00853F' },
-  { code:'NOR', name:'Noruega',         grp:'I', flag:'🇳🇴', col:'#EF2B2D' },
-  { code:'IRQ', name:'Iraque',          grp:'I', flag:'🇮🇶', col:'#CE1126' },
-  { code:'ARG', name:'Argentina',       grp:'J', flag:'🇦🇷', col:'#5A9ED5' },
-  { code:'ALG', name:'Argélia',         grp:'J', flag:'🇩🇿', col:'#006233' },
-  { code:'AUT', name:'Áustria',         grp:'J', flag:'🇦🇹', col:'#ED2939' },
-  { code:'JOR', name:'Jordânia',        grp:'J', flag:'🇯🇴', col:'#007A3D' },
-  { code:'POR', name:'Portugal',        grp:'K', flag:'🇵🇹', col:'#006600' },
-  { code:'COD', name:'RD Congo',        grp:'K', flag:'🇨🇩', col:'#007FCF' },
-  { code:'UZB', name:'Uzbequistão',     grp:'K', flag:'🇺🇿', col:'#1EB53A' },
-  { code:'COL', name:'Colômbia',        grp:'K', flag:'🇨🇴', col:'#A07800' },
-  { code:'ENG', name:'Inglaterra',      grp:'L', flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿', col:'#CF081F' },
-  { code:'CRO', name:'Croácia',         grp:'L', flag:'🇭🇷', col:'#B01020' },
-  { code:'GHA', name:'Gana',            grp:'L', flag:'🇬🇭', col:'#006B3F' },
-  { code:'PAN', name:'Panamá',          grp:'L', flag:'🇵🇦', col:'#005293' },
+  { code:'MEX', name:'México',          grp:'A', fi:'mx', col:'#006847' },
+  { code:'RSA', name:'África do Sul',   grp:'A', fi:'za', col:'#007749' },
+  { code:'KOR', name:'Coreia do Sul',   grp:'A', fi:'kr', col:'#C60C30' },
+  { code:'CZE', name:'Tchéquia',        grp:'A', fi:'cz', col:'#B0252A' },
+  { code:'CAN', name:'Canadá',          grp:'B', fi:'ca', col:'#CC0000' },
+  { code:'BIH', name:'Bósnia e Herz.',  grp:'B', fi:'ba', col:'#002395' },
+  { code:'QAT', name:'Catar',           grp:'B', fi:'qa', col:'#8D1B3D' },
+  { code:'SUI', name:'Suíça',           grp:'B', fi:'ch', col:'#C8242C' },
+  { code:'BRA', name:'Brasil',          grp:'C', fi:'br', col:'#009C3B' },
+  { code:'MAR', name:'Marrocos',        grp:'C', fi:'ma', col:'#C1272D' },
+  { code:'HAI', name:'Haiti',           grp:'C', fi:'ht', col:'#00209F' },
+  { code:'SCO', name:'Escócia',         grp:'C', fi:'gb-sct', col:'#003DA5' },
+  { code:'USA', name:'EUA',             grp:'D', fi:'us', col:'#1B3A6B' },
+  { code:'PAR', name:'Paraguai',        grp:'D', fi:'py', col:'#C8242C' },
+  { code:'AUS', name:'Austrália',       grp:'D', fi:'au', col:'#003580' },
+  { code:'TUR', name:'Turquia',         grp:'D', fi:'tr', col:'#E30A17' },
+  { code:'GER', name:'Alemanha',        grp:'E', fi:'de', col:'#2B2B2B' },
+  { code:'CUW', name:'Curaçao',         grp:'E', fi:'cw', col:'#003DA5' },
+  { code:'CIV', name:'Costa do Marfim', grp:'E', fi:'ci', col:'#D07000' },
+  { code:'ECU', name:'Equador',         grp:'E', fi:'ec', col:'#0038A8' },
+  { code:'NED', name:'Países Baixos',   grp:'F', fi:'nl', col:'#AE1C28' },
+  { code:'JPN', name:'Japão',           grp:'F', fi:'jp', col:'#BC002D' },
+  { code:'SWE', name:'Suécia',          grp:'F', fi:'se', col:'#006AA7' },
+  { code:'TUN', name:'Tunísia',         grp:'F', fi:'tn', col:'#C8010E' },
+  { code:'BEL', name:'Bélgica',         grp:'G', fi:'be', col:'#2B2B2B' },
+  { code:'EGY', name:'Egito',           grp:'G', fi:'eg', col:'#CE1126' },
+  { code:'IRN', name:'Irã',             grp:'G', fi:'ir', col:'#239F40' },
+  { code:'NZL', name:'Nova Zelândia',   grp:'G', fi:'nz', col:'#00247D' },
+  { code:'ESP', name:'Espanha',         grp:'H', fi:'es', col:'#AA151B' },
+  { code:'CPV', name:'Cabo Verde',      grp:'H', fi:'cv', col:'#003893' },
+  { code:'KSA', name:'Arábia Saudita',  grp:'H', fi:'sa', col:'#006C35' },
+  { code:'URU', name:'Uruguai',         grp:'H', fi:'uy', col:'#4A8FC0' },
+  { code:'FRA', name:'França',          grp:'I', fi:'fr', col:'#002395' },
+  { code:'SEN', name:'Senegal',         grp:'I', fi:'sn', col:'#00853F' },
+  { code:'NOR', name:'Noruega',         grp:'I', fi:'no', col:'#EF2B2D' },
+  { code:'IRQ', name:'Iraque',          grp:'I', fi:'iq', col:'#CE1126' },
+  { code:'ARG', name:'Argentina',       grp:'J', fi:'ar', col:'#5A9ED5' },
+  { code:'ALG', name:'Argélia',         grp:'J', fi:'dz', col:'#006233' },
+  { code:'AUT', name:'Áustria',         grp:'J', fi:'at', col:'#ED2939' },
+  { code:'JOR', name:'Jordânia',        grp:'J', fi:'jo', col:'#007A3D' },
+  { code:'POR', name:'Portugal',        grp:'K', fi:'pt', col:'#006600' },
+  { code:'COD', name:'RD Congo',        grp:'K', fi:'cd', col:'#007FCF' },
+  { code:'UZB', name:'Uzbequistão',     grp:'K', fi:'uz', col:'#1EB53A' },
+  { code:'COL', name:'Colômbia',        grp:'K', fi:'co', col:'#A07800' },
+  { code:'ENG', name:'Inglaterra',      grp:'L', fi:'gb-eng', col:'#CF081F' },
+  { code:'CRO', name:'Croácia',         grp:'L', fi:'hr', col:'#B01020' },
+  { code:'GHA', name:'Gana',            grp:'L', fi:'gh', col:'#006B3F' },
+  { code:'PAN', name:'Panamá',          grp:'L', fi:'pa', col:'#005293' },
 ];
 
 /* ── Special pages ───────────────────────── */
@@ -87,7 +87,12 @@ function pageStickerIds(page) {
 
 const TOTAL = PAGES.reduce((s,p)=>s+pageStickerIds(p).length, 0);
 
-/* ── State ───────────────────────────────── */
+/* ── Flag helper ─────────────────────────── */
+function mkFlag(fi, cls) {
+  const s = document.createElement('span');
+  s.className = `fi fi-${fi} ${cls||''}`;
+  return s;
+}
 let obtained = new Set();
 let curPage  = PAGES.findIndex(p=>p.id==='BRA');
 let selOpen  = false;
@@ -148,24 +153,27 @@ function mkSlot(id, numLabel, extraClass, iconType, slotLabel, col, area) {
       iconEl.append(h,b);
     }
   } else {
-    // Obtained: show flag (team) or icon
-    iconEl = document.createElement('div');
+    // Obtained: show flag or icon
     if(iconType==='badge') {
-      iconEl.style.cssText = 'font-size:24px;line-height:1;position:relative;z-index:3';
-      // get team flag from current page if team page
       const pg = PAGES[curPage];
-      if(pg.type==='team') iconEl.textContent = pg.team.flag;
-      else iconEl.textContent = '⭐';
+      iconEl = pg.type==='team'
+        ? mkFlag(pg.team.fi, 'fi-md')
+        : document.createElement('span');
+      iconEl.style.cssText = 'border-radius:3px;position:relative;z-index:3;display:block;';
     } else if(iconType==='photo') {
+      iconEl = document.createElement('div');
       iconEl.style.cssText = 'font-size:16px;position:relative;z-index:3';
       iconEl.textContent = '📸';
     } else if(iconType==='fwc') {
+      iconEl = document.createElement('div');
       iconEl.style.cssText = 'font-size:20px;position:relative;z-index:3';
       iconEl.textContent = '⭐';
     } else if(iconType==='coca') {
+      iconEl = document.createElement('div');
       iconEl.style.cssText = 'font-size:18px;position:relative;z-index:3';
       iconEl.textContent = '🥤';
     } else {
+      iconEl = document.createElement('div');
       iconEl.className = 'slot-silhouette';
       const h = document.createElement('div'); h.className='slot-sil-head';
       const b = document.createElement('div'); b.className='slot-sil-body';
@@ -210,16 +218,15 @@ function buildTeam(team) {
   const hdr = document.createElement('div');
   hdr.className = 'phdr-team';
   hdr.style.background = col;
-  hdr.innerHTML = `
-    <div class="phdr-team-flag">${team.flag}</div>
-    <div class="phdr-team-text">
-      <div class="phdr-team-we">WE ARE</div>
-      <div class="phdr-team-name">${team.name.toUpperCase()}</div>
-    </div>
-    <div class="phdr-team-badge">
-      <span class="phdr-team-grp">GRP ${team.grp}</span>
-      <span class="phdr-team-prog" style="color:${done?'#b2ffb8':'rgba(255,255,255,0.85)'}">${got}/20</span>
-    </div>`;
+
+  const hdrFlag = mkFlag(team.fi, 'phdr-team-flag fi-lg');
+  const hdrText = document.createElement('div');
+  hdrText.className = 'phdr-team-text';
+  hdrText.innerHTML = `<div class="phdr-team-we">WE ARE</div><div class="phdr-team-name">${team.name.toUpperCase()}</div>`;
+  const hdrBadge = document.createElement('div');
+  hdrBadge.className = 'phdr-team-badge';
+  hdrBadge.innerHTML = `<span class="phdr-team-grp">GRP ${team.grp}</span><span class="phdr-team-prog" style="color:${done?'#b2ffb8':'rgba(255,255,255,0.85)'}">${got}/20</span>`;
+  hdr.append(hdrFlag, hdrText, hdrBadge);
 
   // Left grid: S1–S10
   const gl = document.createElement('div');
@@ -280,7 +287,6 @@ function buildTeam(team) {
     gr.appendChild(slot);
   });
 
-  // Group card
   const grpTeams = TEAMS.filter(t=>t.grp===team.grp);
   const gc = document.createElement('div');
   gc.className = 'grp-card';
@@ -293,9 +299,7 @@ function buildTeam(team) {
   const gcFlags = document.createElement('div');
   gcFlags.className = 'grp-flags';
   grpTeams.forEach(t=>{
-    const f = document.createElement('div');
-    f.className = 'grp-flag' + (t.code===code?' active':'');
-    f.textContent = t.flag;
+    const f = mkFlag(t.fi, 'grp-flag fi' + (t.code===code?' active':''));
     f.title = t.name;
     gcFlags.appendChild(f);
   });
@@ -410,7 +414,7 @@ function buildSelector() {
       btn.className = 'sel-t' + (pi===curPage?' active':'');
       btn.title = t.name;
 
-      const f = document.createElement('div'); f.className='sel-t-flag'; f.textContent=t.flag;
+      const f = mkFlag(t.fi, 'sel-t-flag fi');
       const p2 = document.createElement('div');
       p2.className = 'sel-t-prog' + (done?' done':'');
       p2.textContent = `${got}/20`;
@@ -445,12 +449,15 @@ function render() {
   document.getElementById('btnNext').disabled = curPage===PAGES.length-1;
 
   /* Picker button */
+  const cpFlagEl = document.getElementById('cpFlag');
   if(isTeam) {
-    document.getElementById('cpFlag').textContent = page.team.flag;
+    cpFlagEl.className = `fi fi-${page.team.fi} cp-flag fi-md`;
     document.getElementById('cpName').textContent = page.team.name;
     document.getElementById('cpMeta').textContent = `Grupo ${page.team.grp} · ${got}/${tot}`;
   } else {
-    document.getElementById('cpFlag').textContent = page.icon;
+    cpFlagEl.className = 'cp-flag';
+    cpFlagEl.style.cssText = 'font-size:24px;width:auto;height:auto;box-shadow:none;background:none;';
+    cpFlagEl.textContent = page.icon;
     document.getElementById('cpName').textContent = page.label;
     document.getElementById('cpMeta').textContent = `${got}/${tot} figurinhas`;
   }

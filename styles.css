@@ -252,7 +252,16 @@ body {
   z-index: 2;
 }
 
-.phdr-team-flag { font-size: 32px; line-height: 1; flex-shrink: 0; filter: drop-shadow(0 1px 3px rgba(0,0,0,0.3)); }
+.phdr-team-flag { flex-shrink: 0; width: 48px; height: 36px; border-radius: 4px; box-shadow: 0 2px 6px rgba(0,0,0,0.35); background-size: cover !important; }
+
+/* ── flag-icons sizing ── */
+.fi { display: inline-block !important; }
+.fi-lg  { width: 48px !important; height: 36px !important; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.25); }
+.fi-md  { width: 32px !important; height: 24px !important; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+.fi-sm  { width: 24px !important; height: 18px !important; border-radius: 2px; }
+.fi-xs  { width: 20px !important; height: 15px !important; border-radius: 2px; }
+.fi-grp { width: 30px !important; height: 22px !important; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.15); opacity: .35; filter: saturate(.3); transition: opacity .2s, filter .2s; }
+.fi-grp.active { opacity: 1 !important; filter: none !important; width: 34px !important; height: 26px !important; box-shadow: 0 2px 5px rgba(0,0,0,0.25); }
 
 .phdr-team-text { flex: 1; min-width: 0; }
 .phdr-team-we   { font-family: var(--font-cond); font-size: 9px; font-weight: 600; letter-spacing: .3em; color: rgba(255,255,255,0.55); }
@@ -326,12 +335,14 @@ body {
   flex: 1;
   display: grid;
   gap: 5px;
-  align-content: start;
+  /* stretch content to fill page equally */
+  align-content: stretch;
 }
 
-/* Team left: S1 badge 2×2 top-left */
+/* Team left: S1 badge 2×2 top-left — 4 equal rows */
 .sgrid-tl {
   grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   grid-template-areas:
     "s1 s1 s2 s3"
     "s1 s1 s4 s5"
@@ -339,9 +350,10 @@ body {
     "s10 . . .";
 }
 
-/* Team right: S13 photo 2×2 top-right, group card bottom-left */
+/* Team right: S13 photo 2×2 top-right, group card bottom-left — 4 equal rows */
 .sgrid-tr {
   grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(4, 1fr);
   grid-template-areas:
     "s11 s12 s13 s13"
     "s14 s15 s13 s13"
@@ -372,7 +384,10 @@ body {
   position: relative;
   user-select: none;
   transition: border-color .15s, transform .09s;
-  min-height: 60px;
+  /* Fill the grid cell completely */
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .slot:hover {
@@ -570,25 +585,28 @@ body {
 
 .grp-flags {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
 }
 
 .grp-flag {
-  font-size: 21px;
-  line-height: 1;
-  opacity: .35;
-  filter: saturate(.3) brightness(.85);
-  transition: opacity .2s, filter .2s;
+  width: 28px;
+  height: 21px;
+  border-radius: 2px;
+  display: block;
+  opacity: .3;
+  filter: saturate(.3);
+  transition: opacity .2s, filter .2s, width .2s, height .2s;
 }
 
 .grp-flag.active {
   opacity: 1;
   filter: none;
-  font-size: 24px;
-  filter: drop-shadow(0 1px 3px rgba(0,0,0,0.2));
+  width: 34px;
+  height: 25px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.25);
 }
 
 /* ═══════════════════════════════════════════
@@ -653,7 +671,7 @@ body {
 .ctrl-picker:hover { border-color: rgba(255,215,0,.35); background: rgba(255,215,0,.06); }
 .ctrl-picker.open  { border-color: rgba(255,215,0,.5);  background: rgba(255,215,0,.08); border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
 
-.cp-flag    { font-size: 26px; line-height: 1; flex-shrink: 0; }
+.cp-flag { flex-shrink: 0; width: 36px; height: 27px; border-radius: 3px; box-shadow: 0 1px 4px rgba(0,0,0,0.3); }
 .cp-info    { flex: 1; min-width: 0; text-align: left; }
 .cp-name    { display: block; font-family: var(--font-display); font-size: 16px; letter-spacing: .03em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .cp-meta    { display: block; font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; }
@@ -737,8 +755,8 @@ body {
 .sel-teams { display: flex; gap: 4px; flex-wrap: wrap; flex: 1; }
 
 .sel-t {
-  width: 40px;
-  height: 40px;
+  width: 46px;
+  height: 44px;
   border-radius: 7px;
   border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.03);
@@ -747,13 +765,13 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
   transition: background .12s, border-color .12s, transform .1s;
   position: relative;
 }
 .sel-t:hover { background: rgba(255,255,255,.1); transform: scale(1.08); }
 .sel-t.active { border: 2px solid #FFD700; background: rgba(255,215,0,.12); }
-.sel-t-flag { font-size: 20px; line-height: 1; }
+.sel-t-flag { width: 28px; height: 21px; border-radius: 2px; display: block; }
 .sel-t-prog { font-size: 8px; color: rgba(255,255,255,.3); font-family: var(--font-cond); font-weight: 600; }
 .sel-t-prog.done { color: #7ed884; }
 
